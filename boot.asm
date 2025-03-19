@@ -1,50 +1,30 @@
 [org 0x7c00]
 [bits 16]
 
-; global start
+start: jmp boot
 
-start:
-    mov si, input_msg
-    call print_msg
-    call user_press_loop
-    mov si, loading_msg
-    call print_msg
-    jmp switch
+%include "lib/io.asm"
 
-user_press_loop:
-    mov ah, 0x0
-    int 0x16
-    cmp al, 0
-    je user_press_loop
-    ret
+boot:
+    ; mov bh, 1
+    ; mov bl, 0
+    ; call MovCursor
 
-switch:
+    mov si, msg
+    call Print
+
     cli
-    lgdt [GDT_DESC]
-    mov eax, cr0
-    or eax, 0x1
-    mov cr0, eax
-    jmp CS_SEG:kernel_init
 
-[bits 32]
-kernel_init:
-    mov ax, DS_SEG
-    mov ds, ax
-    mov ss, ax
+    mov ax, 0x50
     mov es, ax
-    mov fs, ax
-    mov gs, ax
+    xor bx, bx
+    mov al, 2
+    call ReadDisk
 
-    mov ebp, 0x90000
-    mov esp, ebp
+    jmp 0x50:00 ; 0x500
+    hlt
 
-    jmp $
-
-%include "gdt.asm"
-%include "io.asm"
-
-input_msg db "Press any key to enter...", 0xa,0xd,0
-loading_msg db "Switching to protected mode...", 0xa,0xd,0
+msg db "Loading from Hard drive...", 0xa, 0xd, 0
 
 times 510-($-$$) db 0
 dw 0xaa55
