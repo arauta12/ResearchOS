@@ -47,21 +47,45 @@ Print:
     jmp Print
 
 ; al: number of sectors to read
+; al is input
+
+; ch: cylinder
+; cl: sector
+; dh: head
+; dl: drive #
 ReadDisk:
-    mov ah, 0x02
-    ; al is input
+    mov ah, 0x2
     mov ch, 0
-    mov cl, 2
     mov dh, 0
-    mov dl, 0x80
+    mov dl, 0x81    ; change to 0x80 when qemu testing
     int 0x13
 
-    jc DiskFailure
+    jc DriveFailure
     ret
 
-DiskFailure:
+ReadFloppy:
+    mov ah, 0x2
+    mov ch, 0
+    mov dh, 0
+    mov dl, 0
+    int 0x13
+
+    jc BootFailure
+    ret
+
+DriveFailure:
+    mov dl, al
     mov si, failure
+    call Print
+    mov al, dl
+    call ReadFloppy
+    ret
+
+BootFailure:
+    mov si, bootFail
     call Print
     jmp $
 
-failure db "Hard disk failed to read...", 0xa, 0xd, 0
+failure db "Hard disk failed to read sectors.", 0xa, 0xd, 0
+readFlpy db "Reading from floppy...", 0xa, 0xd, 0
+bootFail db "ERROR: Could not load in sectors.", 0xa, 0xd, 0
