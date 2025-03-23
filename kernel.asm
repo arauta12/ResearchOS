@@ -23,6 +23,10 @@ kernel:
 
     mov si, prot
     call Print
+
+    mov ah, 0x01
+    mov cx, 0x2607
+    int 0x10
     
     ; Start switch to Protected Mode
     cli

@@ -1,4 +1,5 @@
 ENTRY(start)
+OUTPUT(binary)
 
 PHDRS {
     code PT_LOAD FLAGS(0x1 | 0x4);

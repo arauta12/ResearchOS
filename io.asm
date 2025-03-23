@@ -57,7 +57,7 @@ ReadDisk:
     mov ah, 0x2
     mov ch, 0
     mov dh, 0
-    mov dl, 0x81    ; change to 0x80 when qemu testing
+    mov dl, 0x80    ; change to 0x80 when qemu testing
     int 0x13
 
     jc DriveFailure

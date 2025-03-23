@@ -5,7 +5,6 @@ SRC=src
 OS=$(BIN)/main.bin
 DISK=$(BIN)/os.img
 
-# BOOTLOADER_SRCS := $(wildcard *.asm)
 C_SRCS := $(wildcard $(SRC)/*.c)
 C_OBJS := $(patsubst $(SRC)/%.c, $(BIN)/%.o, $(C_SRCS))
 
@@ -15,15 +14,14 @@ bootdisk: $(BOOTLOADER) $(KERNEL_ST) $(OS)
 	dd conv=notrunc if=$(BOOTLOADER) of=$(DISK) bs=512 count=1 seek=0
 	dd conv=notrunc if=$(KERNEL_ST) of=$(DISK) bs=512 count=1 seek=1
 	dd conv=notrunc if=$(OS) of=$(DISK) bs=512 seek=2
-	cp $(DISK) $(BIN)/os.iso
 $(BIN)/boot.bin: boot.asm
 	nasm -f bin $< -o $@
 $(BIN)/kernel.bin: kernel.asm
 	nasm -f bin $< -o $@
 $(OS): $(C_OBJS)
-	ld -m elf_i386 -T loader.lds $< -o $@.elf
-	objcopy -O binary $@.elf $@
-$(BIN)/%.o: $(C_SRCS)
+	ld -m elf_i386 -T loader.lds $(C_OBJS) -o $@.elf
+	objcopy -O binary $@.elf $@ 
+$(BIN)/%.o: $(SRC)/%.c
 	gcc $(CFLAGS) -c $< -o $@
 clean:
 	rm $(BIN)/*
