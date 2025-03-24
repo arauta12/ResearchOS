@@ -1,0 +1,6 @@
+bin/boot.bin
+bin/main.bin
+bin/main.bin.elf
+bin/main.o
+bin/os.img
+bin/ps2_driver.o
