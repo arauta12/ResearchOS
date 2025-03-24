@@ -1,5 +1,8 @@
 #include "../include/vga_TUI.h"
 
+static int current_cell = 0;
+static unsigned char screenColor = BLACK;
+
 void clearScrn() {
     char *vid = (char*)VID_MEM;
     for (int x = 0; x < VID_WIDTH; ++x) {
@@ -8,52 +11,60 @@ void clearScrn() {
             vid += 2;
         }
     }
+    current_cell = 0;
 }
 
 void setScrnColor(unsigned char color) {
+    screenColor = color;
     char *vid = (char*)VID_MEM + 1;
     for (int x = 0; x < VID_WIDTH; ++x) {
         for (int y = 0; y < VID_HEIGHT; ++y) {
             *vid &= 0x0f;
-            *vid |= (color << 4);
+            *vid |= (screenColor << 4);
             vid += 2;
         }
     }
 }
 
+unsigned char getScrnColor() { return screenColor; }
+
 void printColorChar(
         unsigned char c, 
         unsigned char foreground,
-        unsigned char background,
-        unsigned int x, 
-        unsigned int y) 
-{
-    if (x > VID_WIDTH) return;
-    if (y > VID_HEIGHT) return;
-    if (c == '\n') return;
+        unsigned char background) {
+    char *vid = (char*)VID_MEM + 2 * current_cell;
 
-    char *vid = (char*)VID_MEM + 2 * (x + VID_WIDTH * y);
-    *vid = c;
     *(vid + 1) = (background << 4) | (foreground);
+
+    if (c == '\n') {
+        current_cell -= (current_cell % VID_WIDTH);
+        current_cell += VID_WIDTH;
+        return;
+    } else if (c == '\t') {
+        current_cell += 4;
+        return;
+    }
+
+    *vid = c;
+    current_cell++;
+    current_cell %= (VID_WIDTH * VID_HEIGHT);
+    *(vid + 3) = (LIGHT_GRAY << 4);
 }
 
-void printChar(unsigned char c, unsigned int x, unsigned int y) {
-    printColorChar(c, WHITE, BLACK, x, y);
+void printChar(unsigned char c) {
+    printColorChar(c, WHITE, screenColor);
 }
 
-void printString(char *str, 
+void printColorStr(char *str, 
         unsigned char foreground,
-        unsigned char background,
-        unsigned int x, 
-        unsigned int y) {
+        unsigned char background) {
     int i = 0;
     while (str[i] != '\0') {
-        if (str[i] == '\n' || x >= VID_WIDTH) {
-            x = 0;
-            y++;
-        } else {
-            printColorChar(str[i], foreground, background, x++, y);   
-        }
-        i++;
+        printColorChar(str[i++], foreground, background);
     }
+}
+
+void printStr(char *str) {
+    unsigned char foreground = (screenColor == BLACK) ? WHITE : BLACK;
+    printColorStr(str, foreground, screenColor);
 }

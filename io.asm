@@ -46,6 +46,7 @@ Print:
     int 0x10
     jmp Print
 
+
 ; al: number of sectors to read
 ; al is input
 
@@ -76,6 +77,8 @@ ReadFloppy:
 DriveFailure:
     mov dl, al
     mov si, failure
+    call Print
+    mov si, readFlpy
     call Print
     mov al, dl
     call ReadFloppy

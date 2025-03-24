@@ -1,9 +1,8 @@
-#include <stdint.h>
+#ifndef IDT_H
+#define IDT_H
 
-#define IDT_MEM 0x20000
-#define INT_GATE 0xe
-#define TASK_GATE 0x5
-#define TRAP_GATE 0xf
+#include <stdint.h>
+#include "ps2_driver.h"
 
 struct IDT_ENTRY {
     uint16_t offset_l;
@@ -13,11 +12,17 @@ struct IDT_ENTRY {
     uint16_t offset_h;
 };
 
+extern struct IDT_ENTRY idt[];
+extern void loadIdt();
+extern unsigned int isr_keyboard;
+
 void add_entry(
-    uint32_t offset, 
-    uint16_t selector, 
-    uint8_t reserved,
+    int index,
+    uint32_t base_addr, 
+    uint16_t selector,
     uint8_t attributes
 );
 
 void init_idt();
+
+#endif

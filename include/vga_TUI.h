@@ -1,3 +1,6 @@
+#ifndef VGA_TUI_H
+#define VGA_TUI_H
+
 #define VID_MEM 0xb8000
 #define VID_WIDTH 80
 #define VID_HEIGHT 25
@@ -19,21 +22,19 @@
 #define YELLOW 14
 #define WHITE 15
 
+
 void clearScrn();
 void setScrnColor(unsigned char color);
-void printChar(unsigned char c, unsigned int x, unsigned int y);
+unsigned char getScrnColor();
+void printChar(unsigned char c);
 void printColorChar(
     unsigned char c, 
     unsigned char foreground,
-    unsigned char background,
-    unsigned int x, 
-    unsigned int y);
-void printString(
-    char *str, 
-    unsigned char foreground,
-    unsigned char background,
-    unsigned int x, 
-    unsigned int y);
+    unsigned char background);
 
-// void scrollDown();
-// void scrollUp();
+void printColorStr(char *str, 
+    unsigned char foreground,
+    unsigned char background);
+
+void printStr(char *str);
+#endif

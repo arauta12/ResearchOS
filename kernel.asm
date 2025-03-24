@@ -5,19 +5,18 @@ kernel_start equ 0x2000
 
 begin: jmp kernel
 
-
 %include "io.asm"
 %include "gdt.asm"
 
 kernel:
-    mov ah, 0x01
-    int 0x16
-    jz kernel
+    ; mov ah, 0x01
+    ; int 0x16
+    ; jz kernel
     
     mov ax, 0x200
     mov es, ax
     xor bx, bx
-    mov al, 6
+    mov al, 10
     mov cl, 3
     call ReadDisk
 
@@ -27,6 +26,10 @@ kernel:
     mov ah, 0x01
     mov cx, 0x2607
     int 0x10
+
+    ; mov dl, 0
+    ; mov dh, dl
+    ; call SetCursor
     
     ; Start switch to Protected Mode
     cli
@@ -48,7 +51,7 @@ ld_seg:
     mov ebp, 0x90000
     mov esp, ebp
 
-    call kernel_start
+    call [kernel_start + 0x18]
     jmp $
 
 prot db "Setting up kernel...", 0xa, 0xd, 0

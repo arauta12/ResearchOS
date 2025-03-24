@@ -2,12 +2,11 @@ ENTRY(start)
 OUTPUT(binary)
 
 PHDRS {
-    code PT_LOAD FLAGS(0x1 | 0x4);
+    code PT_LOAD FILEHDR PHDRS FLAGS(0x1 | 0x4) AT(0x2000);
 }
 
 SECTIONS {
-    . = 0x2000;
-    .text : { *(.text) } :code
+    .text 0x2000 + SIZEOF_HEADERS : { *(.text) } :code
     .data : { *(.data) }
     .bss : { *(.bss) }
     .rodata : { *(.rodata) }
