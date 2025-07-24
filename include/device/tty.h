@@ -37,8 +37,6 @@ typedef struct {
 
 TTY_CELL* getCellPtrTTY(int cell);
 
-void shiftScreenUp();
-
 void setCharTTY(uint8_t, int);
 void setBackgroundColorTTY(uint8_t, int);
 void setForegroundColorTTY(uint8_t, int);

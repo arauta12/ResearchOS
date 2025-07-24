@@ -3,27 +3,6 @@
 static int currentCell = 0;
 static uint8_t defaultColor = (BLACK << 4) | WHITE;
 
-void shiftScreenUp() {
-    for (int i = 0; i < TTY_WIDTH; i++) {
-        setCharTTY('\0', i);
-        setColorsTTY(BLACK, WHITE, i);
-    }
-
-    for (int line = 1; line < TTY_HEIGHT - 1; line++) {
-        for (int col = 0; col < TTY_WIDTH; col++) {
-            TTY_CELL* cell = getCellPtrTTY(line * TTY_WIDTH + col);
-            TTY_CELL* prevCell = getCellPtrTTY((line - 1) * TTY_WIDTH + col);
-            *prevCell = *cell;
-        }
-    }
-
-    for (int i = 0; i < TTY_WIDTH; i++) {
-        TTY_CELL* cell = getCellPtrTTY((TTY_HEIGHT - 1) * TTY_WIDTH + i);
-        cell->letter = '\0';
-        cell->color = defaultColor;
-    }
-}
-
 TTY_CELL* getCellPtrTTY(int cell) {
     return TTY_PTR + cell;
 }
@@ -35,6 +14,11 @@ void setCharTTY(uint8_t c, int cell) {
         currentCell += 4;
     } else if (c == '\n') {
         currentCell += TTY_WIDTH - (currentCell % TTY_WIDTH); 
+    } else if (c == '\b') {
+        ptr->letter = '\0';
+        currentCell--;
+        if (currentCell < 0)
+            currentCell = 0;
     } else {
         ptr->letter = c;    
     }
@@ -60,9 +44,12 @@ void setColorsTTY(uint8_t backColor, uint8_t foreColor, int cell) {
 void clearScreenTTY() {
     int cell = 0;
     while (cell < TTY_WIDTH * TTY_HEIGHT) {
-        setColorsTTY(BLACK, WHITE, '\0');
+        setColorsTTY(BLACK, WHITE, cell);
+        setCharTTY('\0', cell);
         cell++;
     }
+    
+    currentCell = 0;
 }
 
 void printCharTTY(uint8_t c) {

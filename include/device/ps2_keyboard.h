@@ -9,65 +9,74 @@
 https://wiki.osdev.org/PS/2_Keyboard
 */
 
-#define PS2_KEYBOARD_ERROR          0xEE    // Key / buffer error
-#define PS2_KEYBOARD_TEST_PASS      0xAA    // Keyboard sent for self test passed
-#define PS2_KEYBOARD_ECHO           0xEE    // For diagnostics
+// Commands
+#define PS2_KEYBOARD_ECHO           0xEE
+#define PS2_KEYBOARD_SCANCODE       0xF0
+#define PS2_KEYBOARD_IDENTIFY       0xF2
+#define PS2_KEYBOARD_TYPE_OPT       0xF3
+#define PS2_KEYBOARD_ENABLE         0xF4
+#define PS2_KEYBOARD_DISABLE        0xF5
+#define PS2_KEYBOARD_DEFAULTS       0xF6
+#define PS2_KEYBOARD_RESEND_BYTE    0xFE
+#define PS2_KEYBOARD_RESET          0xFF
 
-#define PS2_KEYBOARD_SCANCODE_SET   0xF0    // Scancode command
-#define PS2_KEYBOARD_CURRENT_SET    0x00    // Get current scancode
-#define PS2_KEYBOARD_SET_1          0x01    // Scancode set 1
-#define PS2_KEYBOARD_SET_2          0x02    // Scancode set 2
-#define PS2_KEYBOARD_SET_3          0x03    // Scancode set 3
+#define PS2_KEYBOARD_ERROR_1        0x00
+#define PS2_KEYBOARD_PASS_TEST      0xAA
+#define PS2_KEYBOARD_ECHO_RESP      0xEE
+#define PS2_KEYBOARD_CMD_ACK        0xFA
+#define PS2_KEYBOARD_TEST_FAIL_1    0xFC
+#define PS2_KEYBOARD_TEST_FAIL_2    0xFD
+#define PS2_KEYBOARD_ERROR_2        0xFF
 
-#define PS2_KEYBOARD_IDENTIFY       0xF2    // Detect device type
-
-#define PS2_KEYBOARD_RATE_AND_DELAY 0xF3    // setting repeat rate & delay
-#define PS2_KEYBOARD_30_HZ_RATE     0x0     // 30 Hz repeat rate
-#define PS2_KEYBOARD_2_HZ_RATE      0x1f    // 2 Hz repeat rate
-#define PS2_KEYBOARD_DELAY_250MS    0 << 5  // 250ms key delay for repeat  
-#define PS2_KEYBOARD_DELAY_500MS    1 << 5  // 500ms key delay for repeat 
-#define PS2_KEYBOARD_DELAY_750MS    2 << 5  // 750ms key delay for repeat 
-#define PS2_KEYBOARD_DELAY_1000MS   3 << 5  // 1000ms key delay for repeat 
-
-#define PS2_KEYBOARD_ENABLE         0xF4    // Clear buffer & begin scanning
-#define PS2_KEYBOARD_DISABLE        0xF5    // Disable keyboard
-#define PS2_KEYBOARD_DEFAULT        0xF6    // Use default
-#define PS2_KEYBOARD_ACK            0xFA    // Command acknowledge
-#define PS2_KEYBOARD_RESEND         0xFE    // Resend byte
-#define PS2_KEYBOARD_RESET          0xFF    // Resetting keyboard       
-
-// MISSING: escape, enter, CTRL, SHIFTS, ALTS, CAPS
-// static uint8_t _scan_code_1_set[88]  = {
-//     0, 0, '2', '3', '4', '5', '6', '7', '8', '9', '0',
-//     '-', '=', '\b', '\t', 'q', 'w', 'e', 'r', 't', 'y',
-//         'u', 'i', 'o', 'p', '[', ']', 0,
-//     0, 'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`',
-//     0, '\\', 'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/', 0, '*',
-//     0, ' ', 0, 0,
-//     0, 0, 0, 0,
-//     0, 0, 0, 0,
-//     0, 0, 0, '7',
-//     '8', '9', '-', '4', '5', '6', '+', '1', '2', '3', '0', '.',
-//     0, 0, 0, 0
-// };
-static uint8_t _scan_code_1_set[] = { 
-   0 , 0 , '1' , '2' , 
-   '3' , '4' , '5' , '6' ,  
-   '7' , '8' , '9' , '0' ,  
-   '-' , '=' , 0 , 0 , 'Q' ,  
-   'W' , 'E' , 'R' , 'T' , 'Y' , 
-   'U' , 'I' , 'O' , 'P' , '[' , ']' ,  
-   0 , 0 , 'A' , 'S' , 'D' , 'F' , 'G' ,  
-   'H' , 'J' , 'K' , 'L' , ';' , '\'' , '`' ,  
-   0 , '\\' , 'Z' , 'X' , 'C' , 'V' , 'B' , 'N' , 'M' , 
-   ',' , '.' , '/' , 0 , '*' , 0 , ' ' 
+static uint8_t _scancode_set_1[] = {
+    0,    0,   '1',  '2',  '3',  '4',  '5',  '6',  // 0x00–0x07
+   '7',  '8',  '9',  '0',  '-',  '=',  '\b', '\t', // 0x08–0x0F
+   'q',  'w',  'e',  'r',  't',  'y',  'u',  'i',  // 0x10–0x17
+   'o',  'p',  '[',  ']',  '\n',  0,    'a',  's',  // 0x18–0x1F
+   'd',  'f',  'g',  'h',  'j',  'k',  'l',  ';',  // 0x20–0x27
+   '\'', '`',   0,  '\\',  'z',  'x',  'c',  'v',   // 0x28–0x2F
+   'b',  'n',  'm',  ',',  '.',  '/',   0,   '*',  // 0x30–0x37
+    0,   ' ',   0,    0,    0,    0,    0,    0,    // 0x38–0x3F
+    0,    0,    0,    0,    0,    0,    0,   '7', // 0x40–0x47
+   '8',  '9',  '-',  '4',  '5',  '6',  '+',  '1',  // 0x48–0x4F
+   '2',  '3',  '0',  '.',   0,    0,    0,    0     // 0x50–0x57
 };
 
-static uint8_t _sc1_released_key_offset = 0x80;
+static uint8_t _scancode_set_2[] = {
+   0,    0, 0, 0, 0, 0, 0, 0, // 0x00-0x07
+   0,    0, 0, 0, 0, '\t', '`', 0,   // 0x08-0x0F
+   0,    0, 0, 0, 0, 'q', '1', 0,    // 0x10-0x17
+   0,    0, 'z', 's', 'a', 'w', '2', 0, // 0x18-0x1F
+   0,   'c', 'x', 'd', 'e', '4', '3', 9,  // 0x20-0x27
+   0,   ' ', 'v', 'f', 't', 'r', '5', 0,  // 0x28-0x2F
+   0,   'n', 'b', 'h', 'g', 'y', '6', 0,  // 0x30-0x37
+   0,    0, 'm', 'j', 'u', '7', '8', 0,    // 0x38-0x3F
+   0,   ',', 'k', 'i', 'o', '0', '9', 0,     // 0x40-0x47
+   0,   '.', '/', 'l', ';', 'p', '-', 0,     // 0x48-0x4F
+   0,    0, '\'', 0, '[', '=', 0, 0,         // 0x50-0x57
+   0,    0, '\n', ']', 0, '\\', 0, 0,           // 0x58-0x5F
+   0,    0, 0, 0, 0, 0, '\b', 0,           // 0x60-0x67
+   0,   '1', 0, '4', '7', 0, 0, 0,       // 0x68-0x6F
+   '0', '.', '2', '5', '6', '8', 0, 0, // 0x70-0x77
+    0,  '+', '3', '-', '*', '9', 0, 0,   // 0x78-0x7F
+};
 
-uint8_t getScancode();
-uint8_t getScancodeSet();
-bool setScancodeSet(int setNum);
-bool ps2KeyboardInit();
+typedef struct {
+    bool pressedDown;
+    uint8_t letter;
+} KEYCHAR;
+
+bool ps2KeyboardEcho();
+uint8_t ps2KeyboardGetScancodeSet();
+bool ps2KeyboardSetScancodeSet(uint8_t);
+bool ps2KeyboardSetTypeRate(uint8_t);
+bool ps2KeyboardToggleScan(bool);
+bool ps2KeyboardSetDefault();
+bool ps2KeyboardSelfTest();
+
+KEYCHAR ps2KeyboardGetChar();
+KEYCHAR irqGetKeyboardChar();
+
+bool ps2KeyboardConfig();
 
 #endif

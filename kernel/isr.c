@@ -1,5 +1,7 @@
 #include <isr.h>
 #include <io.h>
+#include <stdio.h>
+#include <device/tty.h>
 
 void isr_keyboard();
 void isr_gen_prot_fault();
@@ -12,9 +14,11 @@ struct idt_desc {
 };
 
 void initIdt() {
+    kprintf("Starting IDT config...\n");
     addEntry(0x21, (uint32_t)(&isr_keyboard), 3, INT_32);
     addEntry(0x0D, (uint32_t)(&isr_gen_prot_fault), 3, INT_32);
     loadIdt();
+    kprintf("IDT config complete.\n");
 }
 
 void addHardwareEntry(uint8_t interruptVector, uint32_t isrAddress, GATE_TYPE gate) {
@@ -39,22 +43,9 @@ void handleGenProtFault() {
 }
 
 void handleKeypress() {
-    static char _scan_code_1_set[] = { 
-        0 , 0 , '1' , '2' , 
-        '3' , '4' , '5' , '6' ,  
-        '7' , '8' , '9' , '0' ,  
-        '-' , '=' , 0 , 0 , 'Q' ,  
-        'W' , 'E' , 'R' , 'T' , 'Y' , 
-        'U' , 'I' , 'O' , 'P' , '[' , ']' ,  
-        0 , 0 , 'A' , 'S' , 'D' , 'F' , 'G' ,  
-        'H' , 'J' , 'K' , 'L' , ';' , '\'' , '`' ,  
-        0 , '\\' , 'Z' , 'X' , 'C' , 'V' , 'B' , 'N' , 'M' , 
-        ',' , '.' , '/' , 0 , '*' , 0 , ' ' 
-    };
-    // uint8_t c = readChar();
-    // uint8_t c = getScancode();
-    uint8_t c = 'a';
-    if (c < 0x3a)
-        kputchar(_scan_code_1_set[c]);
+    KEYCHAR key = irqGetKeyboardChar();
+    if (key.letter != 0xff && key.pressedDown)
+        kputchar(key.letter);
+    
     picEoi(1);
 }

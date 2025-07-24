@@ -43,6 +43,7 @@ This is able to be read and written with the 0xD0 and 0xD1 commands.
 */
 
 static bool ps2DeviceActive[2] = {false, false};
+static const int MAX_ATTEMPTS = 3000;
 
 /* Get byte from PS2 status register */
 static uint8_t _read_status_register() {
@@ -54,7 +55,6 @@ static uint8_t _read_status_register() {
     If it takes too long, returns false
 */
 static bool _wait_input_buf_clear() {
-    const int MAX_ATTEMPTS = 1000;
     bool input_clear = false;
     int attempts = 0;
 
@@ -73,7 +73,6 @@ static bool _wait_input_buf_clear() {
     If it takes too long, returns false
 */
 static bool _wait_input_buf_set() {
-    const int MAX_ATTEMPTS = 1000;
     bool input_set = false;
     int attempts = 0;
 
@@ -92,7 +91,6 @@ static bool _wait_input_buf_set() {
     If it takes too long, returns false
 */
 static bool _wait_output_buf_clear() {
-    const int MAX_ATTEMPTS = 1000;
     bool output_clear = false;
     int attempts = 0;
 
@@ -111,7 +109,6 @@ static bool _wait_output_buf_clear() {
     If it takes too long, returns false
 */
 static bool _wait_output_buf_set() {
-    const int MAX_ATTEMPTS = 1000;
     bool output_set = false;
     int attempts = 0;
 
@@ -259,6 +256,9 @@ void ps2SendCommand(uint8_t cmd) {
 }
 
 uint8_t ps2GetData() {
+    if (!_wait_output_buf_set())
+        return 0x00;
+    
     uint8_t resp = inb(PS2_DATA_PORT);
     io_wait();
     return resp;

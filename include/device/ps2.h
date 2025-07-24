@@ -52,6 +52,7 @@ bool ps2SendPort2Data(uint8_t);
 bool ps2ToggleTranslation(bool);
 bool ps2ResetPort(int);
 const bool* getPs2DeviceStatusList(); 
+
 bool ps2Initiate();
 
 #endif
