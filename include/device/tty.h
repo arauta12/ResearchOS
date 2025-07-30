@@ -8,6 +8,9 @@
 #define TTY_WIDTH 80
 #define TTY_HEIGHT 25
 
+#define TTY_ADDR 0xb8000
+#define TTY_PTR (TTY_CELL*)TTY_ADDR
+
 typedef enum ttyColor {
     BLACK = 0,
     BLUE = 1,
@@ -28,28 +31,28 @@ typedef enum ttyColor {
 } TTY_COLOR;
 
 typedef struct {
-    char letter;
+    uint8_t character;
     uint8_t color;
 } TTY_CELL;
 
-#define TTY_ADDR 0xb8000
-#define TTY_PTR (TTY_CELL*)0xb8000
+typedef struct {
+    int row;
+    int col;
+} TTY_POS;
 
-TTY_CELL* getCellPtrTTY(int cell);
+static TTY_CELL* _pos_to_ptr(TTY_POS* pos);
 
-void setCharTTY(uint8_t, int);
-void setBackgroundColorTTY(uint8_t, int);
-void setForegroundColorTTY(uint8_t, int);
-void setColorsTTY(uint8_t, uint8_t, int);
+TTY_CELL* getCell(TTY_POS* pos);
 
-void clearScreenTTY();
+void setCharTTY(uint8_t character, TTY_POS* pos);
+void setBackgroundColorTTY(uint8_t background, TTY_POS* pos);
+void setForegroundColorTTY(uint8_t foreground, TTY_POS* pos);
+void setColorsTTY(uint8_t background, uint8_t foreground, TTY_POS* pos);
+void setColorCharTTY(uint8_t character, uint8_t foreground, TTY_POS* pos);
+void setCellTTY(TTY_CELL* cell, TTY_POS* pos);
 
-void printCharTTY(uint8_t);
-void printStringTTY(const char*);
-void printCharForegroundTTY(uint8_t, uint8_t);
-void printCharColorTTY(uint8_t, uint8_t, uint8_t);
-
-void printDigit(int);
-void printInteger(int);
+void clearAllCharsTTY();
+void setScreenBackgroundTTY(uint8_t background);
+void setScreenForegroundTTY(uint8_t foreground);
 
 #endif

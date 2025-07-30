@@ -25,6 +25,7 @@
 #define PS2_WRITE_PORT_1_OUTPUT_BUFFER  0xD2 /* Appears like Port 1 sent next byte to us */
 #define PS2_WRITE_PORT_2_OUTPUT_BUFFER  0xD3 /* Appears like Port 2 sent next byte to us */
 #define PS2_WRITE_PORT_2_INPUT_BUFFER   0xD4 /* Tell PS/2 to send byte to Port 2 */
+#define PS2_PORT_1_CMD_ACK              0xFA
 #define PS2_DEVICE_RESET                0xFF
 
 static bool _wait_input_buf_clear();
@@ -47,6 +48,8 @@ bool ps2TestPort(int);
 bool ps2TestController();
 void ps2SendCommand(uint8_t);
 uint8_t ps2GetData();
+bool ps2SendPort1DataAck(uint8_t);
+bool ps2SendPort2DataAck(uint8_t);
 bool ps2SendPort1Data(uint8_t);
 bool ps2SendPort2Data(uint8_t);
 bool ps2ToggleTranslation(bool);

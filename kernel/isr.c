@@ -1,12 +1,11 @@
 #include <isr.h>
 #include <io.h>
-#include <stdio.h>
-#include <device/tty.h>
-
-void isr_keyboard();
-void isr_gen_prot_fault();
+#include <stdout.h>
+#include <conversion.h>
 
 IDT_ENTRY _idt_table[256];
+
+static uint16_t _pit_count = 0;
 
 struct idt_desc {
     uint16_t size;
@@ -15,8 +14,15 @@ struct idt_desc {
 
 void initIdt() {
     kprintf("Starting IDT config...\n");
-    addEntry(0x21, (uint32_t)(&isr_keyboard), 3, INT_32);
-    addEntry(0x0D, (uint32_t)(&isr_gen_prot_fault), 3, INT_32);
+    addEntry(0x00, (uint32_t)(&isr_divide_zero), 0, INT_32);
+    addEntry(0x08, (uint32_t)(&isr_double_fault), 0, INT_32);
+    addEntry(0x0A, (uint32_t)(&isr_invalid_tss), 0, INT_32);
+    addEntry(0x0B, (uint32_t)(&isr_no_segment), 0, INT_32);
+    addEntry(0x0C, (uint32_t)(&isr_invalid_ss), 0, INT_32);
+    addEntry(0x0D, (uint32_t)(&isr_gen_prot_fault), 0, INT_32);
+    addEntry(0x0E, (uint32_t)(&isr_page_fault), 0, INT_32);
+    addEntry(0x20, (uint32_t)(&isr_timer), 0, INT_32);
+    addEntry(0x21, (uint32_t)(&isr_keyboard), 0, INT_32);
     loadIdt();
     kprintf("IDT config complete.\n");
 }
@@ -31,21 +37,73 @@ void addEntry(uint8_t interruptVector, uint32_t isrAddress, int privilege, GATE_
 
     _idt_table[interruptVector].offsetLow = (isrAddress & 0x0000ffff);
     _idt_table[interruptVector].selector = 0x08;
-    _idt_table[interruptVector].flags = 0x8e;
     _idt_table[interruptVector].reserved = 0;
     _idt_table[interruptVector].offsetHigh = ((isrAddress & 0xffff0000) >> 16);
-    // _idt_table[interruptVector].flags = IDT_INIT_FLAG | IDT_PRIVILEGE_LVL(privilege) | gate;
+    _idt_table[interruptVector].flags = IDT_INIT_FLAG | IDT_PRIVILEGE_LVL(privilege) | gate;
+}
+
+void handleDoubleFault() {
+    kerror(KERN_EMERG, "Double Fault!\n");
+    __asm__ volatile ("hlt");
 }
 
 void handleGenProtFault() {
-    kprintf("ERROR: General Protection Fault!\nStopping...");
+    kerror(KERN_EMERG, "General Protection Fault!\n");
     __asm__ volatile ("hlt");
+}
+
+void handleDivideByZero() {
+    kerror(KERN_CRIT, "Divide by 0!\n");
+    __asm__ volatile ("hlt");
+}
+
+void handleInvalidTSS() {
+    kerror(KERN_CRIT, "Invalid TSS!\n");
+    __asm__ volatile ("hlt");
+}
+
+void handleNoSegment() {
+    kerror(KERN_CRIT, "Needed system segment not found!\n");
+    __asm__ volatile ("hlt");
+}
+
+void handleInvalidStackSegment() {
+    kerror(KERN_CRIT, "Invalid Stack Segment!\n");
+    __asm__ volatile ("hlt");
+}
+
+void handlePageFault() {
+    uint32_t linearAddress = 0x0;
+    uint32_t errorCode = 0x0;
+    __asm__ volatile ("movl %%cr2, %0" : "=r" (linearAddress));
+    __asm__ volatile ("popl %0" : "=r" (errorCode));
+    kerror(KERN_CRIT, "Page for %x not in memory! Error: %x\n", linearAddress, errorCode);
+    __asm__ volatile ("hlt");
+}
+
+void handleTimer() {
+    uint16_t count = getLatchByte();
+    _pit_count = (_pit_count + 1) % 1000;
+    TTY_POS pos = {0, 0};
+
+    if (_pit_count < 500) {
+        printStringFromPos("TASK 1", &pos);
+    } else {
+        printStringFromPos("TASK 2", &pos);
+    }
+
+    // while (true);
+
+    reloadCounter();
+
+    picEoi(0);
 }
 
 void handleKeypress() {
     KEYCHAR key = irqGetKeyboardChar();
-    if (key.letter != 0xff && key.pressedDown)
+    if (key.letter != 0xff) {
         kputchar(key.letter);
+    }
     
     picEoi(1);
 }

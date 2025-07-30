@@ -79,10 +79,10 @@ uint16_t _get_pic_mask();
 void picDisable();
 void picEnable();
 uint16_t getPicMask();
-void picRemap(uint8_t, uint8_t);
-void picEoi(uint8_t);
-void setMaskIrq(uint8_t);
-void clearMaskIrq(uint8_t);
-void maskIrqs(uint16_t);
+void picRemap(uint8_t mainOffset, uint8_t extOffset);
+void picEoi(uint8_t irq);
+void setMaskIrq(uint8_t irq);
+void clearMaskIrq(uint8_t irq);
+void maskIrqs(uint16_t mask);
 
 #endif

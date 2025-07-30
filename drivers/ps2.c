@@ -45,7 +45,17 @@ This is able to be read and written with the 0xD0 and 0xD1 commands.
 static bool ps2DeviceActive[2] = {false, false};
 static const int MAX_ATTEMPTS = 3000;
 
-/* Get byte from PS2 status register */
+/* 
+    Get byte from PS2 status register
+    Bit 0: output buffer is empty (0) / full (1)
+    Bit 1: input buffer is empty (0) / full (1)
+    (Bit 2: sys flag for tests (don't touch))
+    Bit 3: written input byte is for: device (0) / cmd (1)
+    Bit 4: ?
+    Bit 5: ?
+    Bit 6: timeout: no error (0), error (1)
+    Bit 7: parity: no error (0), error (1)
+*/
 static uint8_t _read_status_register() {
     return inb(PS2_CMD_PORT);
 }
@@ -151,13 +161,13 @@ static void _write_config_byte(uint8_t config) {
 
 /* 
     Read controller output port 
-    If unable to, returns 0x0
+    If unable to, returns 0xff
     NOTE: check this before using it (bit 0 should be 1!)
 */
 static uint8_t _read_output_port() {
     outb(PS2_CMD_PORT, PS2_READ_OUTPUT_PORT);
     if(!_wait_output_buf_set())
-        return 0x0;
+        return 0xff;
 
     return inb(PS2_DATA_PORT);
 }
@@ -174,6 +184,7 @@ static void _write_output_port(uint8_t data) {
         return;
 
     outb(PS2_DATA_PORT, data);
+    io_wait();
 }
 
 /* 
@@ -264,30 +275,71 @@ uint8_t ps2GetData() {
     return resp;
 }
 
-bool ps2SendPort1Data(uint8_t data) {
+/**
+ * Sends data to 1st PS2 Port and check acknowledgment
+ * @param data Byte of data to send to the port
+ * @return True if successful, false if it failed
+ */
+bool ps2SendPort1DataAck(uint8_t data) {
     if (!_wait_input_buf_clear())
         return false;
 
     outb(PS2_DATA_PORT, data);
-    io_wait();
+    if (!_wait_output_buf_set())
+        return false;
 
-    return true;
+    return (inb(PS2_DATA_PORT) == PS2_PORT_1_CMD_ACK);
 }
-
-bool ps2SendPort2Data(uint8_t data) {
+ 
+bool ps2SendPort2DataAck(uint8_t data) {
     outb(PS2_CMD_PORT, PS2_WRITE_PORT_2_INPUT_BUFFER);
 
     if (!_wait_input_buf_clear()) {
-        kprintf("PS2 Port 2 data send: failed to clear input buffer.\b");
+        kerror(KERN_INFO, "PS2 Port 2 failed to clear input buffer.\n");
         return false;
     }
 
     outb(PS2_DATA_PORT, data);
     io_wait();
 
-    return true;
+    if (!_wait_output_buf_set()) {
+        kerror(KERN_INFO, "PS2 Port 2 failed to clear input buffer.\n");
+        return false;
+    }
+
+    return (inb(PS2_DATA_PORT) == 0xFA);
 }
 
+bool ps2SendPort1Data(uint8_t data) {
+    if (!_wait_input_buf_clear())
+        return false;
+
+    outb(PS2_DATA_PORT, data);
+    if (!_wait_output_buf_set())
+        return false;
+
+    return true;
+}
+ 
+bool ps2SendPort2Data(uint8_t data) {
+    outb(PS2_CMD_PORT, PS2_WRITE_PORT_2_INPUT_BUFFER);
+
+    if (!_wait_input_buf_clear()) {
+        kerror(KERN_INFO, "PS2 Port 2 failed to clear input buffer.\n");
+        return false;
+    }
+
+    outb(PS2_DATA_PORT, data);
+    io_wait();
+
+    if (!_wait_output_buf_set()) {
+        kerror(KERN_INFO, "PS2 Port 2 failed to clear input buffer.\n");
+        return false;
+    }
+
+    return true;
+}
+ 
 bool ps2ToggleTranslation(bool enable) {
     uint8_t currentConfig = _read_config_byte();
     if (!_is_valid_config_byte(currentConfig))
@@ -312,26 +364,45 @@ bool ps2ResetPort(int portNum) {
     if (portNum < 1 || portNum > 3)
         return false;
 
-    if (portNum == 1) {
-        ps2SendPort1Data(PS2_DEVICE_RESET);
-    } else {
-        ps2SendPort2Data(PS2_DEVICE_RESET);
+    // Send data
+    if (portNum == 1 && !ps2SendPort1Data(PS2_DEVICE_RESET)) {
+        kerror(KERN_WARNING, "Failed to send data to PS2 Port 1!\n");
+        return false;
+    } else if (portNum == 2 && !ps2SendPort2Data(PS2_DEVICE_RESET)) {\
+        kerror(KERN_WARNING, "Failed to send data to PS2 Port 2!\n");
+        return false;
     }
 
     if (!_wait_output_buf_set())
         return false;
 
+    // Check 1st response
     uint8_t resp = inb(PS2_DATA_PORT);
     io_wait();
-    if (resp != 0xFA && resp != 0xAA)
+    if (resp != 0xAA && resp != 0xFA) {
+        kerror(KERN_WARNING, "Reset failed for PS2 Port %d: resp=%x!\n", portNum, resp);
         return false;
+    }
 
     if (!_wait_output_buf_set())
         return false;
 
+    // Check 2nd response
     resp = inb(PS2_DATA_PORT);
-    if (resp != 0xFA && resp != 0xAA)
+    io_wait();
+    if (resp != 0xAA && resp != 0xFA) {
+        kerror(KERN_WARNING, "Reset failed for PS2 Port %d: resp=%x!\n", portNum, resp);
         return false;
+    }
+
+    // Receive Port 2 (mouse) ID
+    if (portNum == 2) {
+        if (!_wait_output_buf_set())
+            return false;
+
+        resp = inb(PS2_DATA_PORT);
+        io_wait();
+    }
     
     return true;
 } 
@@ -351,7 +422,7 @@ bool ps2Initiate() {
     // set config byte
     uint8_t oldConfig = _read_config_byte();
     if (!_is_valid_config_byte(oldConfig)) {
-        kprintf("(ERROR) PS2 config: Can't set config!\n");
+        kerror(KERN_ERR, "PS2 config: Can't set config!\n");
         return false;
     }
 
@@ -359,7 +430,7 @@ bool ps2Initiate() {
 
     // test controller
     if(!ps2TestController()) {
-        kprintf("(ERROR) PS2 config: Can't test controller!\n");
+        kerror(KERN_ERR, "PS2 config: Can't test controller!\n");
         return false;
     }
 
@@ -374,7 +445,7 @@ bool ps2Initiate() {
 
     // test ports
     if (!ps2TestPort(1)) {
-        kprintf("(ERROR) PS2 config: Test Port 1 failed!\n");
+        kerror(KERN_ERR, "PS2 config: Test Port 1 failed!\n");
         ps2DeviceActive[0] = false;
     } else {
         ps2DeviceActive[0] = true;
@@ -382,20 +453,20 @@ bool ps2Initiate() {
 
     if (ps2DeviceActive[1]) {
         if (!ps2TestPort(2)) {
-            kprintf("(ERROR) PS2 config: Test Port 2 failed!\n");
+            kerror(KERN_ERR, "PS2 config: Test Port 2 failed!\n");
             ps2DeviceActive[1] = false;
         }
     }
 
     if (!ps2DeviceActive[0] && !ps2DeviceActive[1]) {
-        kprintf("(ERROR) PS2 config: both ports failed!\n");
+        kerror(KERN_ERR, "PS2 config: both ports failed!\n");
         return false;
     }
 
     // Enable devices
     config = _read_config_byte();
     if (!_is_valid_config_byte(config)) {
-        kprintf("(ERROR) PS2 config: failed to enable Port 1!\n");
+        kerror(KERN_ERR, "PS2 config: failed to enable Port 1!\n");
         ps2DeviceActive[0] = false;
         ps2DeviceActive[1] = false;
         return false;
@@ -418,17 +489,17 @@ bool ps2Initiate() {
     bool resetSuccess = ps2ResetPort(1);
     if (!resetSuccess) {
         ps2DeviceActive[0] = false;
-        kprintf("(ERROR) PS2 config: Port 1 reset issue!\n");
+        kerror(KERN_ERR, "PS2 config: Port 1 reset issue!\n");
     }
 
     resetSuccess = ps2ResetPort(2);
     if (!resetSuccess) {
         ps2DeviceActive[1] = false;
-        kprintf("(ERROR) PS2 config: Port 2 reset issue!\n");
+        kerror(KERN_ERR, "PS2 config: Port 2 reset issue!\n");
     }
 
     if (!ps2DeviceActive[0] && !ps2DeviceActive[1]) {
-        kprintf("(ERROR) PS2 config: both ports failed!\n");
+        kerror(KERN_ERR, "PS2 config: both ports failed!\n");
         return false;
     }
 

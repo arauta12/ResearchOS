@@ -5,7 +5,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-bool isDigit(char c);
+bool isDigit(char);
+
+char toLower(char);
+char toUpper(char);
+
+bool isAsciiChar(char);
 
 int charToDigit(char);
 char digitToChar(int);

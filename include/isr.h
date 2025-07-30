@@ -1,11 +1,14 @@
 #ifndef ISR_H
 #define ISR_H
 
+#include <device/ps2_keyboard.h>
+#include <device/pic.h>
+#include <device/pit.h>
 #include <stdio.h>
 #include <stdint.h>
-#include <device/ps2_keyboard.h>
+#include <stdout.h>
 #include <idt.h>
-#include <device/pic.h>
+#include <stddef.h>
 
 #define IDT_PRIVILEGE_LVL(n) n << 5
 #define IDT_INIT_FLAG 1 << 7
@@ -26,9 +29,11 @@ typedef enum gates {
     TRAP_32 = 0xF
 } GATE_TYPE;
 
+static uint16_t _pit_count;
+
 void handleKeypress();
+void handleTimer();
 void initIdt();
-void isr_keyboard();
 void addEntry(uint8_t, uint32_t, int, GATE_TYPE);
 void addHardwareEntry(uint8_t, uint32_t, GATE_TYPE);
 

@@ -17,6 +17,7 @@ end_tag:
 	.long	0
 	.long 	8
 mutliboot2_header_end:
+
 	.text
 	.code32
 	.globl	_start
@@ -26,28 +27,26 @@ _start:
 	cld
 	cmpl	$0x36d76289, %eax
 	jne		invalid
-	/*xorw	%ax, %ax
-	movw	%ax, %ds*/
 	lgdtl	gdt_descr
-	ljmpl	$0x8, $cs_seg
+	movw	$0x10, %ax
+	movw	%ax, %ss
+	movw	%ax, %ds
+	movw	%ax, %es
+	movw	%ax, %fs
+	movw	%ax, %gs
+	ljmpl	$0x8,$continue
 continue:
-	movl	$0x280000, %esp
+	movl	$0x300000, %esp
 	call	kmain
 	jmp		hang
 hang:
 	jmp hang
 invalid:
 	hlt
-cs_seg:
-	movw	$0x10, %ax
-	movw	%ax, %ds
-	movw	%ax, %ss
-	movw	%ax, %gs
-	movw	%ax, %es
-	movw	%ax, %fs
-	jmp 	continue
+
 
 /* Describe GDT table */
+	.section .rodata
 gdt_start:
 	.long	0
 	.long	0
@@ -70,3 +69,4 @@ gdt_end:
 gdt_descr:
 	.word	(gdt_end - gdt_start - 1)
 	.long	gdt_start
+

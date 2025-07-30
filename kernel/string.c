@@ -1,5 +1,4 @@
 #include <string.h>
-#include <device/tty.h>
 
 size_t strlen(const char* str) {
     size_t len = 0;
@@ -26,7 +25,6 @@ char* strcpy(char* destination, const char* source) {
 char* strncpy(char* destination, const char* source, size_t num) {
     size_t copied = 0;
     char* cpy = destination;
-    printStringTTY(destination);
 
     while (*source != '\0' && copied < num) {
         *cpy = *source;
@@ -43,16 +41,11 @@ char* strncpy(char* destination, const char* source, size_t num) {
 
     *cpy = '\0';
 
-    printCharTTY('\n');
-    printStringTTY(destination);
-
     return destination;
 }
 
 char* strcat(char* destination, const char* source) {
     char* cpy = destination;
-
-    printStringTTY(destination);
 
     while (*cpy != '\0')
         cpy++;
@@ -65,15 +58,11 @@ char* strcat(char* destination, const char* source) {
 
     *cpy = '\0';
 
-    printCharTTY('\n');
-    printStringTTY(destination);
-
     return destination;
 }
 
 char* strncat(char* destination, const char* source, size_t num) {
     char* cpy = destination;
-    printStringTTY(destination);
 
     while (*cpy != '\0')
         cpy++;
@@ -93,9 +82,6 @@ char* strncat(char* destination, const char* source, size_t num) {
     }
 
     *cpy = '\0';
-
-    printCharTTY('\n');
-    printStringTTY(destination);
 
     return destination;
 }

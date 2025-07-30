@@ -1,5 +1,6 @@
 #include <device/pic.h>
 #include <io.h>
+#include <stdio.h>
 
 /*
 
@@ -53,7 +54,9 @@ void picEnable() {
     outb(PIC2_DATA, 0);
 }
 
-void picRemap(uint8_t main_offset, uint8_t ext_offset) {
+void picRemap(uint8_t mainOffset, uint8_t extOffset) {
+
+    kprintf("Remapping PIC...\n");
 
     // ICW1 - basic setup
     outb(PIC1_CMD, ICW1_INIT | 
@@ -69,12 +72,14 @@ void picRemap(uint8_t main_offset, uint8_t ext_offset) {
     io_wait();
     
     // ICW2 - IRQ offsets into interrupt table
-    outb(PIC1_DATA, main_offset);
-    outb(PIC2_DATA, ext_offset);
+    outb(PIC1_DATA, mainOffset);
+    io_wait();
+    outb(PIC2_DATA, extOffset);
     io_wait();
 
     // ICW3 - cascade connect w/ IRQ 2
     outb(PIC1_DATA, ICW3_EXT(2));
+    io_wait();
     outb(PIC2_DATA, 2);
     io_wait();
 
@@ -83,21 +88,25 @@ void picRemap(uint8_t main_offset, uint8_t ext_offset) {
                     ICW4_NO_BUFF | 
                     ICW4_NORM_EOI | 
                     ICW4_8086_MODE);
+    io_wait();
     outb(PIC2_DATA, ICW4_NO_NESTED | 
                     ICW4_NO_BUFF | 
                     ICW4_NORM_EOI | 
                     ICW4_8086_MODE);
     io_wait();
 
-    maskIrqs(0xfffd);
-    // maskIrqs(0);
+    maskIrqs(0xffff);
+    kprintf("PIC enabled with mask %x.\n", getPicMask());
 }
 
 void picEoi(uint8_t irq) {
-    if (irq > 7)
+    if (irq > 7) {
+        // kerror(KERN_DEBUG, "slave EOI %d\n", irq);
         outb(PIC2_CMD, PIC_GEN_EOI);
+    }
     
     outb(PIC1_CMD, PIC_GEN_EOI);
+    // kerror(KERN_DEBUG, "master EOI %d\n", irq);
 }
 
 void setMaskIrq(uint8_t irq) {
@@ -115,11 +124,11 @@ void setMaskIrq(uint8_t irq) {
 void clearMaskIrq(uint8_t irq) {
     if (irq > 7) {
         uint8_t mask = _get_pic_ext_mask();
-        mask &=  ~SET_MASK_IRQ(irq -8);
+        mask &=  ~(SET_MASK_IRQ(irq - 8));
         outb(PIC2_DATA, mask);
     } else {
         uint8_t mask = _get_pic_main_mask();
-        mask &= ~SET_MASK_IRQ(irq);
+        mask &= ~(SET_MASK_IRQ(irq));
         outb(PIC1_DATA, mask);
     }
 }

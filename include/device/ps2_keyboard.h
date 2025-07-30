@@ -28,6 +28,8 @@ https://wiki.osdev.org/PS/2_Keyboard
 #define PS2_KEYBOARD_TEST_FAIL_2    0xFD
 #define PS2_KEYBOARD_ERROR_2        0xFF
 
+#define PS2_MAX_CODE_LEN            8
+
 static uint8_t _scancode_set_1[] = {
     0,    0,   '1',  '2',  '3',  '4',  '5',  '6',  // 0x00–0x07
    '7',  '8',  '9',  '0',  '-',  '=',  '\b', '\t', // 0x08–0x0F
@@ -61,11 +63,52 @@ static uint8_t _scancode_set_2[] = {
     0,  '+', '3', '-', '*', '9', 0, 0,   // 0x78-0x7F
 };
 
+static int _current_scancode_set;
+static bool _caps_lock;
+static bool _shift_press;
+
+typedef enum {
+    NOT_CMD = 0,
+    UNSUPPORTED_CMD,
+    ESCAPE,
+    HOME,
+    END,
+    INSERT,
+    DELETE,
+    POWER,
+    SLEEP,
+    WAKE,
+    NUMBER_LOCK,
+    CAPS_LOCK_ON,
+    CAPS_LOCK_OFF,
+    LEFT_SHIFT,
+    RIGHT_SHIFT,
+    LEFT_CTRL,
+    RIGHT_CTRL,
+    LEFT_ALT,
+    RIGHT_ALT,
+    CURSOR_LEFT,
+    CURSOR_RIGHT,
+    CURSOR_UP,
+    CURSOR_DOWN,
+    PAGE_UP,
+    PAGE_DOWN,
+} KEY_CMD;
+
+typedef struct {
+    bool pressedDown;
+    uint8_t data;
+    KEY_CMD cmd;
+} key_st;
+
 typedef struct {
     bool pressedDown;
     uint8_t letter;
 } KEYCHAR;
 
+static uint8_t _lower_to_upper_char(uint8_t);
+
+void flushKeyBuffer();
 bool ps2KeyboardEcho();
 uint8_t ps2KeyboardGetScancodeSet();
 bool ps2KeyboardSetScancodeSet(uint8_t);
@@ -74,7 +117,8 @@ bool ps2KeyboardToggleScan(bool);
 bool ps2KeyboardSetDefault();
 bool ps2KeyboardSelfTest();
 
-KEYCHAR ps2KeyboardGetChar();
+KEYCHAR irqKeyboard1GetKey();
+KEYCHAR irqKeyboard2GetChar();
 KEYCHAR irqGetKeyboardChar();
 
 bool ps2KeyboardConfig();
