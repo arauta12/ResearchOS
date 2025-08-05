@@ -1,5 +1,16 @@
 #include <stdio.h>
 
+/**
+ * Prints log leveled message to default log screen (TTY) based on formatted string
+ *
+ * Levels are 0-7, 0 being the highest & 7 the lowest
+ *
+ * Ex. kerror(KERN_INFO, "string: %s", "not now") = 15;
+ * @param errorLevel Integer representing one of the levels mentioned above
+ * @param format Format specifier on how to print the string
+ * @param va_args Variable number of arguments corresponding the to the format
+ * @return The number of characters printed to the screen
+ */
 int kerror(int errorLevel, const char* format, ...) {
     if (errorLevel < 0 || errorLevel > 7)
         return 0;
@@ -69,11 +80,11 @@ int kerror(int errorLevel, const char* format, ...) {
                     break;
                 case 'd':
                     int num = va_arg(args, int);
-                    char intString[12] = {0}; 
+                    char intString[12] = {0};
 
                     intToString(intString, num);
                     printString(intString);
-                    
+
                     numChars += strlen(intString);
                     format++;
                     break;
@@ -84,7 +95,7 @@ int kerror(int errorLevel, const char* format, ...) {
 
                     intToHex(hexString, hex);
                     printString(hexString);
-                    
+
                     numChars += strlen(hexString);
                     format++;
                     break;
@@ -118,6 +129,14 @@ int kerror(int errorLevel, const char* format, ...) {
     return numChars;
 }
 
+/**
+ * Print message to default log screen (TTY) based on formatted string
+ *
+ * Ex. kprintf("string: %s", "not now") = 15;
+ * @param format Format specifier on how to print the string
+ * @param va_args Variable number of arguments corresponding the to the format
+ * @return The number of characters printed to the screen
+ */
 int kprintf(const char* format, ...) {
     va_list args;
     va_start(args, format);
@@ -133,23 +152,23 @@ int kprintf(const char* format, ...) {
                     numChars += kputchar(*format);
                     break;
                 case 'd':
-                    int num = va_arg(args, int);
-                    char intString[12] = {0}; 
+                    size_t num = va_arg(args, size_t);
+                    char intString[12] = {0};
 
                     intToString(intString, num);
                     printString(intString);
-                    
+
                     numChars += strlen(intString);
                     format++;
                     break;
                 case 'x':
                 case 'X':
-                    int hex = va_arg(args, int);
+                    size_t hex = va_arg(args, size_t);
                     char hexString[12];
 
                     intToHex(hexString, hex);
                     printString(hexString);
-                    
+
                     numChars += strlen(hexString);
                     format++;
                     break;
@@ -179,8 +198,15 @@ int kprintf(const char* format, ...) {
     return numChars;
 }
 
+/**
+ * Prints a single character to the screen (TTY)
+ *
+ * Ex. kputchar('c') = 1
+ * @param character Character to print to the screen
+ * @return Number of characters printed to the screen
+ */
 int kputchar(int character) {
-    char c = (char)character;
+    char c = (char) character;
     printChar(c);
     return 1;
 }

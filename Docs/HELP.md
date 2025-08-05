@@ -16,3 +16,4 @@
 ## 🧵 OS Development Help Links
 - [osdev pages](https://wiki.osdev.org/Expanded_Main_Page)
 - [linux github](https://github.com/torvalds/linux)
+- [Specs](https://wiki.osdev.org/Technical_Specifications)

@@ -33,6 +33,8 @@ static uint16_t _pit_count;
 
 void handleKeypress();
 void handleTimer();
+uint16_t getTimerCount();
+uint16_t getCycleElapsed(uint16_t oldCount);
 void initIdt();
 void addEntry(uint8_t, uint32_t, int, GATE_TYPE);
 void addHardwareEntry(uint8_t, uint32_t, GATE_TYPE);

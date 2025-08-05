@@ -238,7 +238,7 @@ KEYCHAR irqKeyboard2GetChar() {
                 letter = toUpper(letter);   // Note: returns same key for non english letters
             
             if (_shift_press) {
-                if (isAsciiChar(letter)) {
+                if (isLetter(letter)) {
                     letter = (_caps_lock)? toLower(letter) : toUpper(letter);
                 } else {
                     letter = _lower_to_upper_letter(letter);

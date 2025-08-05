@@ -182,9 +182,6 @@ bool printChar(uint8_t character) {
         case '\n':
             shiftedUp = incrementNewline();
             break;
-        case ' ':
-            shiftedUp = incrementChar();
-            break;
         default:
             setCharTTY(character, &_cursor);
             shiftedUp = incrementChar();
@@ -202,9 +199,6 @@ bool printCharFromPos(uint8_t character, TTY_POS* pos) {
             break;
         case '\n':
             shiftedUp = incrementNewlineFromPos(pos);
-            break;
-        case ' ':
-            shiftedUp = incrementCharFromPos(pos);
             break;
         default:
             setCharTTY(character, pos);

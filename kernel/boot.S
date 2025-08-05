@@ -1,3 +1,10 @@
+	.text
+	.code32
+	.globl	_start
+	.type	_start,@function
+_start:
+	jmp _resume
+
 	.set MAGIC,		0xE85250D6
 	.set ARCH,		0
 	.set HEADER_LEN,(mutliboot2_header_end - mutliboot2_header)
@@ -6,7 +13,6 @@
 	.set MMAP_TAG_TYPE,	6
 	.set FLAGS,			0
 
-	.section .multiboot2
 	.align 	8
 mutliboot2_header:
 	.long	MAGIC
@@ -18,11 +24,7 @@ end_tag:
 	.long 	8
 mutliboot2_header_end:
 
-	.text
-	.code32
-	.globl	_start
-	.type	_start,@function
-_start:
+_resume:
 	cli
 	cld
 	cmpl	$0x36d76289, %eax

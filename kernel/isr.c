@@ -82,21 +82,22 @@ void handlePageFault() {
 }
 
 void handleTimer() {
-    uint16_t count = getLatchByte();
-    _pit_count = (_pit_count + 1) % 1000;
-    TTY_POS pos = {0, 0};
-
-    if (_pit_count < 500) {
-        printStringFromPos("TASK 1", &pos);
-    } else {
-        printStringFromPos("TASK 2", &pos);
-    }
-
-    // while (true);
-
+    _pit_count = _pit_count + 1;
     reloadCounter();
 
     picEoi(0);
+}
+
+uint16_t getTimerCount() {
+    return _pit_count;
+}
+
+uint16_t getCycleElapsed(uint16_t oldCount) {
+    uint16_t pitCount = _pit_count;
+    if (oldCount <= pitCount)
+        return pitCount - oldCount;
+
+    return UINT16_MAX - (oldCount - pitCount);
 }
 
 void handleKeypress() {

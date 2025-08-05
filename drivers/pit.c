@@ -1,6 +1,6 @@
 #include <device/pit.h>
 
-static uint16_t _count_value = 0x0;     // In PIT, this rotates to 0xffff + 1
+static uint16_t _count_value = 0x1000;     // In PIT, this rotates to 0xffff + 1
 static int _current_counter = -1;
 static int _current_mode = -1;
 
@@ -36,7 +36,7 @@ uint16_t getLatchByte() {
 
 // TODO: sets new value for counter ()
 void loadNewCounter() {
-
+    
 }
 
 void reloadCounter() {
