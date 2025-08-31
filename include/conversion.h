@@ -16,7 +16,7 @@ bool isLetter(char);
 int charToDigit(char);
 char digitToChar(int);
 int stringToInt(const char*);
-char* intToString(char*, int);
+char* intToString(char*, size_t);
 char hexToChar(int);
 char* intToHex(char*, size_t);
 

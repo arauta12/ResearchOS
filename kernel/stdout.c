@@ -26,6 +26,7 @@ bool incrementChar() {
 
         if (newCursor.row >= TTY_HEIGHT) {
             shiftScreenUp();
+            newCursor.row = TTY_HEIGHT - 1;
             shiftedUp = true;
         }
     }

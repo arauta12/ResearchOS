@@ -17,3 +17,13 @@
 - [osdev pages](https://wiki.osdev.org/Expanded_Main_Page)
 - [linux github](https://github.com/torvalds/linux)
 - [Specs](https://wiki.osdev.org/Technical_Specifications)
+
+## Device driver specs
+- [Old PCI specs (pg. 213)](https://ics.uci.edu/~iharris/ics216/pci/PCI_22.pdf)
+
+## Linux Docs / Links
+- [linux kernel](https://tldp.org/LDP/tlk/tlk-toc.html)
+- [Tutorials](https://www.linux.org/forums/linux-beginner-tutorials.123/)
+- [linux github](https://github.com/torvalds/linux/tree/master/Documentation)
+- [linux kernel docs](https://docs.kernel.org/)
+- [OSdev links](https://wiki.osdev.org/Technical_Specifications)

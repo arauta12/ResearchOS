@@ -1,6 +1,6 @@
 #include <device/pit.h>
 
-static uint16_t _count_value = 0x1000;     // In PIT, this rotates to 0xffff + 1
+static uint16_t _count_value = 0;     // In PIT, this rotates to 0xffff + 1
 static int _current_counter = -1;
 static int _current_mode = -1;
 

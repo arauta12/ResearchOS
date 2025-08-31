@@ -129,7 +129,7 @@ void picRemap(uint8_t mainOffset, uint8_t extOffset) {
     outb(PIC2_DATA, ICW4_NO_NESTED | ICW4_NO_BUFF | ICW4_NORM_EOI | ICW4_8086_MODE);
     io_wait();
 
-    maskIrqs(0xffff);
+    maskIrqs(0xFFFB);
     kprintf("PIC enabled with mask %x.\n", getPicMask());
 }
 

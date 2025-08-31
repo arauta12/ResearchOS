@@ -13,6 +13,8 @@ endif
 
 .PHONY: all
 all: $(DIR_ALL_C_SRCS) $(DIR_ALL_C_ASM) $(C_OBJS) $(ASM_OBJS)
+	cd boot && $(MAKE)
+	cd mm && $(MAKE)
 
 $(C_OBJS): ../bin/%.o : %.c
 	$(CC) $(CFLAGS) -c $< -I ../$(INCLUDE_PATH) -o $@

@@ -684,10 +684,6 @@ void pciEnumerate() {
             pciDevGetInfo(&devHr, &dev);
             _pci_setup_device(&devHr, &dev);
 
-            kprintf("PSI dev %d:%d.%d found! Class: %x, sublass %x, interface: %x\n\tio?: %d, mmio?: %d\n", 
-                    dev.busNum, dev.devNum, dev.functNum, devHr.baseClass, devHr.subClass, devHr.interface,
-                    dev.ioEnabled, dev.mmioEnabled);
-
             // Device exists, let's check if it only has 1 function
             if (devHr.headerType & 0x80 == 0)
                 continue;
@@ -703,10 +699,6 @@ void pciEnumerate() {
                 pciGetHeaderInfo(&devHr, &dev);
                 pciDevGetInfo(&devHr, &dev);
                 _pci_setup_device(&devHr, &dev);
-
-                kprintf("PSI dev %d:%d.%d found! Class: %x, sublass %x, interface: %x\n\tio?: %d, mmio?: %d\n", 
-                    dev.busNum, dev.devNum, dev.functNum, devHr.baseClass, devHr.subClass, devHr.interface,
-                    dev.ioEnabled, dev.mmioEnabled);
             }
         }
     }

@@ -1,6 +1,8 @@
 TODO.md
-os.iso
+os.img
 bin/
-scripts/
+scripts/*
 .clang-format
 .vscode/
+mnt/
+!scripts/installation

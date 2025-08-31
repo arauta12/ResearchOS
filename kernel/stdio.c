@@ -153,7 +153,7 @@ int kprintf(const char* format, ...) {
                     break;
                 case 'd':
                     size_t num = va_arg(args, size_t);
-                    char intString[12] = {0};
+                    char intString[24] = {'\0'};
 
                     intToString(intString, num);
                     printString(intString);
@@ -164,7 +164,7 @@ int kprintf(const char* format, ...) {
                 case 'x':
                 case 'X':
                     size_t hex = va_arg(args, size_t);
-                    char hexString[12];
+                    char hexString[24] = {'\0'};
 
                     intToHex(hexString, hex);
                     printString(hexString);

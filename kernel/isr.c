@@ -6,6 +6,7 @@
 IDT_ENTRY _idt_table[256];
 
 static uint16_t _pit_count = 0;
+static bool _trigger = false;
 
 struct idt_desc {
     uint16_t size;
@@ -21,8 +22,10 @@ void initIdt() {
     addEntry(0x0C, (uint32_t)(&isr_invalid_ss), 0, INT_32);
     addEntry(0x0D, (uint32_t)(&isr_gen_prot_fault), 0, INT_32);
     addEntry(0x0E, (uint32_t)(&isr_page_fault), 0, INT_32);
+
     addEntry(0x20, (uint32_t)(&isr_timer), 0, INT_32);
     addEntry(0x21, (uint32_t)(&isr_keyboard), 0, INT_32);
+    addEntry(0x2E, (uint32_t)(&isr_disk1), 0, INT_32);
     loadIdt();
     kprintf("IDT config complete.\n");
 }
@@ -83,6 +86,7 @@ void handlePageFault() {
 
 void handleTimer() {
     _pit_count = _pit_count + 1;
+    _trigger = false;
     reloadCounter();
 
     picEoi(0);
@@ -101,9 +105,14 @@ uint16_t getCycleElapsed(uint16_t oldCount) {
 }
 
 void handleKeypress() {
-    KEYCHAR key = irqGetKeyboardChar();
-    if (key.letter != 0xff) {
-        kputchar(key.letter);
+    key_st key = irqGetKeyboardChar();
+
+    if (key.cmd == ESCAPE && key.pressedDown) {
+        clearScreen();
+    }
+
+    if (key.cmd == NOT_CMD && key.pressedDown) {
+        kputchar(key.data);
     }
     
     picEoi(1);

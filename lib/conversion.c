@@ -131,7 +131,7 @@ int stringToInt(const char* str) {
  * @param num Integer to convert into a string (integer string)
  * @return Char pointer to new string (same pointer as destination)
  */
-char* intToString(char* destination, int num) {
+char* intToString(char* destination, size_t num) {
     if (num == 0) {
         destination[0] = '0';
         return destination;
@@ -145,7 +145,7 @@ char* intToString(char* destination, int num) {
         num *= -1;
     }
 
-    int cpyNum = num;
+    size_t cpyNum = num;
     int numDigits = 0;
     while (cpyNum > 0) {
         numDigits++;
@@ -191,10 +191,10 @@ char hexToChar(int hexDigit) {
  * @return Char pointer to new string (same pointer as destination)
  */
 char* intToHex(char* destination, size_t num) {
-    if (num < 0) {
-        destination[0] = '\0';
-        return destination;
-    }
+    // if (num < 0) {
+    //     destination[0] = '\0';
+    //     return destination;
+    // }
 
     if (num == 0) {
         destination[0] = '0';

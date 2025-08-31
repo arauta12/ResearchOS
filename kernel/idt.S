@@ -35,6 +35,15 @@ isr_keyboard:
     popal
     iretl
 
+    .extern ataSectorIrq
+    .globl isr_disk1
+    .type isr_disk1,@function
+isr_disk1:
+    pushal
+    call    ataSectorIrq
+    popal
+    iretl
+
     .extern handleDivideByZero
     .globl  isr_divide_zero
     .type   isr_divide_zero,@function

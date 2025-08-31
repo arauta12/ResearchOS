@@ -4,9 +4,11 @@
 #include <device/ps2_keyboard.h>
 #include <device/pic.h>
 #include <device/pit.h>
+#include <device/atapio.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdout.h>
+#include <stdbool.h>
 #include <idt.h>
 #include <stddef.h>
 
@@ -30,6 +32,7 @@ typedef enum gates {
 } GATE_TYPE;
 
 static uint16_t _pit_count;
+static bool _trigger;
 
 void handleKeypress();
 void handleTimer();

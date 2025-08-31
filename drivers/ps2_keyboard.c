@@ -7,6 +7,9 @@
 static int _current_scancode_set = 0;
 static bool _caps_lock = false;
 static bool _shift_press = false;
+static bool _number_lock = false;
+
+static bool _flush_enabled = false;
 
 void flushKeyBuffer() {
     while (ps2GetData() != 0);
@@ -152,9 +155,9 @@ bool ps2KeyboardSelfTest() {
     return false;
 }
 
-static uint8_t _lower_to_upper_letter(uint8_t letter) {
+static uint8_t _lower_to_upper_char(uint8_t letter) {
     if (letter >= 'a' && letter <= 'z')
-        return letter - 0x20;
+        return toUpper(letter);
 
     switch (letter) {
         case '1':
@@ -204,63 +207,222 @@ static uint8_t _lower_to_upper_letter(uint8_t letter) {
     }
 }
 
+static uint8_t _upper_to_lower_char(uint8_t letter) {
+    if (letter >= 'A' && letter <= 'Z')
+        return toLower(letter);
 
-KEYCHAR irqKeyboard1GetChar() {
+    switch (letter) {
+        case '!':
+            return '1';
+        case '@':
+            return '2';
+        case '#':
+            return '3';
+        case '$':
+            return '4';
+        case '%':
+            return '5';
+        case '^':
+            return '6';
+        case '&':
+            return '7';
+        case '*':
+            return '8';
+        case '(':
+            return '9';
+        case ')':
+            return '0';
+        case '_':
+            return '-';
+        case '+':
+            return '=';
+        case '{':
+            return '[';
+        case '}':
+            return ']';
+        case '|':
+            return '\\';
+        case '"':
+            return '\'';
+        case ':':
+            return ';';
+        case '~':
+            return '`';
+        case '<':
+            return ',';
+        case '>':
+            return '.';
+        case '?':
+            return '/';
+        default:
+            return letter;
+    }
+} 
 
+/**
+ * TODO: Do it
+ */
+key_st irqKeyboard1GetChar() {
+    key_st keyInput = {true, 0, UNSUPPORTED_CMD};
+    return keyInput;
 }
 
-// FIXME ISSUE
-KEYCHAR irqKeyboard2GetChar() {
-    KEYCHAR keyInput = {false, 0xff};
+key_st irqKeyboard2GetChar() {
+    key_st keyInput = {true, 0, UNSUPPORTED_CMD};
     uint8_t scancode = inb(PS2_DATA_PORT);
+    bool additionalCmd = false;
+
+    if (scancode == 0xE1) {
+        // Must be pause pressed
+        for (int i = 0; i < 7; i++) {
+            ps2GetData();
+        }
+        
+        keyInput.cmd = PAUSE;
+        keyInput.pressedDown = true;
+        return keyInput;
+    }
+
+    if (scancode == 0xE0) {
+        additionalCmd = true;
+        scancode = ps2GetData();
+
+        if (scancode == 0x12) {
+            // Print screen
+            ps2GetData();
+            ps2GetData();
+
+            keyInput.cmd = PRINT_SCREEN;
+            keyInput.pressedDown = true;
+
+            return keyInput;
+        }
+
+        if (scancode == 0x4A) {
+            // Keypad '/'
+            keyInput.cmd = NOT_CMD;
+            keyInput.data = '/';
+            keyInput.pressedDown = true;
+
+            return keyInput;
+        }
+
+        if (scancode == 0x5A) {
+            // Keypad '\n'
+            keyInput.cmd = NOT_CMD;
+            keyInput.data = '\n';
+            keyInput.pressedDown = true;
+
+            return keyInput;
+        }
+        
+        if (scancode != 0xF0) {
+            // Must be a additional cmd press
+            keyInput.cmd = scancode;
+            keyInput.pressedDown = true;
+
+            return keyInput;
+        }
+    }
 
     if (scancode == 0xF0) {
         scancode = ps2GetData();
-        if (scancode == 0x12 ||scancode == 0x59) {
-            // Detected left/right shift release!
-            _shift_press = false;
-            return keyInput;
-        }
-    } else {
-        // Key press down
-        keyInput.pressedDown = true;
-        if (scancode == 0xE0) {
 
-        } else if (scancode == 0x12 || scancode == 0x59) {
-            // pressed Left/right shift keys
-            _shift_press = true;
-        } else if (scancode == 0x58) {
-            // pressed CapsLock
-            _caps_lock = !_caps_lock;
-        } else if (scancode < 0x80) {
-            uint8_t letter = _scancode_set_2[scancode];
-            if (_caps_lock)
-                letter = toUpper(letter);   // Note: returns same key for non english letters
-            
-            if (_shift_press) {
-                if (isLetter(letter)) {
-                    letter = (_caps_lock)? toLower(letter) : toUpper(letter);
-                } else {
-                    letter = _lower_to_upper_letter(letter);
+        if (additionalCmd) {
+            if (scancode == 0x7C) {
+                // Must be print screen release
+                for (int i = 0; i < 3; i++) {
+                    ps2GetData();
                 }
+
+                keyInput.cmd = PRINT_SCREEN;
+                keyInput.pressedDown = false;
+
+                return keyInput;
             }
 
-            keyInput.letter = letter;
+            if (scancode == 0x4A) {
+                // Keypad '/'
+                keyInput.cmd = NOT_CMD;
+                keyInput.data = '/';
+                keyInput.pressedDown = false;
+
+                return keyInput;
+            }
+
+            if (scancode == 0x5A) {
+                // Keypad '\n'
+                keyInput.cmd = NOT_CMD;
+                keyInput.data = '\n';
+                keyInput.pressedDown = false;
+
+                return keyInput;
+            }
+
+            // Release of additional command key
+            keyInput.cmd = scancode;
+            keyInput.pressedDown = false;
+
+            return keyInput;
+        }
+
+        keyInput.pressedDown = false;
+    }
+
+    // Uses a main key / command
+    if (_scancode_set_2[scancode] == 0) {
+        keyInput.cmd = scancode;
+
+        // Update static key presses (shift, caps, nums locks, ...)
+        switch (scancode) {
+            case CAPS_LOCK:
+                if (keyInput.pressedDown)
+                    _caps_lock = !_caps_lock;
+
+                break;
+            case LEFT_SHIFT:
+            case RIGHT_SHIFT:
+                _shift_press = keyInput.pressedDown;
+                break;
+            case NUMBER_LOCK:
+                if (keyInput.pressedDown)
+                    _number_lock = !_number_lock;
+
+                break;
+        }
+    } else {
+        keyInput.cmd = NOT_CMD;
+        keyInput.data = _scancode_set_2[scancode];
+
+        // Check upper/lowercase of scancode
+        if (isLetter(keyInput.data) && ((_caps_lock ^ _shift_press) == 1)) {
+            keyInput.data = _lower_to_upper_char(keyInput.data);
+        } else if (_shift_press) {
+            keyInput.data = _lower_to_upper_char(keyInput.data);
         }
     }
 
     return keyInput;
 }
 
-KEYCHAR irqGetKeyboardChar() {
-    KEYCHAR keyInput = {false, 0xFF};
+key_st irqGetKeyboardChar() {
+    key_st keyInput = {true, 0, UNSUPPORTED_CMD};
+
     if (_current_scancode_set == 2) {
         return irqKeyboard2GetChar();
     } else if (_current_scancode_set == 1) {
-        return keyInput;
+        return irqKeyboard1GetChar();
     } else {
         return keyInput;
     }
+}
+
+void ps2SetFlush(bool newFlush) {
+    _flush_enabled = newFlush;
+}
+
+bool ps2GetFlush() {
+    return _flush_enabled;
 }
 
 // Assumes PS2 config done including this keyboard 

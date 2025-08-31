@@ -3,6 +3,7 @@
 
 void loadIdt();
 void isr_keyboard();
+void isr_disk1();
 void isr_timer();
 void isr_gen_prot_fault();
 void isr_divide_zero();

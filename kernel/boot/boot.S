@@ -1,9 +1,5 @@
-	.text
-	.code32
-	.globl	_start
-	.type	_start,@function
-_start:
-	jmp _resume
+
+	.section .multiboot2,"a"
 
 	.set MAGIC,		0xE85250D6
 	.set ARCH,		0
@@ -24,7 +20,19 @@ end_tag:
 	.long 	8
 mutliboot2_header_end:
 
-_resume:
+
+	.text
+	.code32
+	.globl	_start
+	.type	_start,@function
+	.extern	kprintf
+	.extern	readBootTable
+	.extern KRNL_END
+	.extern KRNL_END_PHY
+	.extern pmmInit
+	.extern kvmmInit
+	.extern pg_enable
+_start:
 	cli
 	cld
 	cmpl	$0x36d76289, %eax
@@ -37,18 +45,31 @@ _resume:
 	movw	%ax, %fs
 	movw	%ax, %gs
 	ljmpl	$0x8,$continue
-continue:
-	movl	$0x300000, %esp
-	call	kmain
-	jmp		hang
-hang:
-	jmp hang
 invalid:
 	hlt
+continue:
+	movl	STACK_START, %esp
+	pushl	%ebx
+	call	readBootTable
+	call	pmmInit
+	call	kvmmInit
+	/*call	pg_enable*/
+	jmp		paging_continue
+paging_continue:
+	call	kmain
+
+hang:
+	jmp hang
 
 
-/* Describe GDT table */
+	.globl	STACK_START
 	.section .rodata
+STACK_START:
+	.long	(0x800000 + KRNL_END)
+kill_message:
+	.string	"Invalid grub signature. Aborting..."
+
+	/* Describe GDT table */
 gdt_start:
 	.long	0
 	.long	0
@@ -71,4 +92,3 @@ gdt_end:
 gdt_descr:
 	.word	(gdt_end - gdt_start - 1)
 	.long	gdt_start
-
