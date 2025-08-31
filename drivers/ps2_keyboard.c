@@ -439,16 +439,16 @@ bool ps2KeyboardConfig() {
 
     // change to set 2
     if (!ps2KeyboardSetScancodeSet(2)) {
-        kerror(KERN_ERR, "Keyboard config: failed to set scancode!\n");
-        return false;
+        kerror(KERN_INFO, "Keyboard config: failed to set scancode!\n");
+        // return false;
     }
 
     _current_scancode_set = 2;
 
     // setting default type rate
     if (!ps2KeyboardSetTypeRate(0x60)) {
-        kerror(KERN_ERR, "Keyboard config: failed to set type rate!\n");
-        return false;
+        kerror(KERN_INFO, "Keyboard config: failed to set type rate!\n");
+        // return true;
     }
 
     if (!ps2KeyboardToggleScan(true)) {
