@@ -7,13 +7,13 @@
 
 ## ResearchOS details
 
--   ResearchOS is (expected to be) a multitasking Operating system that is based off of Unix and Linux, with an API (in the future) following POSIX standards.
+-   ResearchOS is a multitasking Operating system that is based off of Unix and Linux, with an syscall API following POSIX standards.
 
--   It supports multiboot 2 and utilizes GRUB as a multiboot2 compliant bootloader supported on many machines.
+-   It supports multiboot 2 and utilizes GRUB as a multiboot2 compliant bootloader, supported on many machines.
 
--   Currently it runs on x86 machines (x86-64 too by backwards compatibility) with future support for other machine architectures.
+-   Currently it runs on x86 machines with future support for x86-64 machines.
 
--   ResearchOS also utilizes GCC native tools, such as the compiler, assembler (GAS) and linker (LD) to build the final result, as well as multiple Virtual Machines, such as QEMU, Bochs, and Virtual Box, to test iterations of ResearchOS.
+-   ResearchOS utilizes GCC native tools, such as the GCC compiler, assembler (GAS), and linker (LD) to build the final kernel executable. Uses a variety of virtual machines, such as QEMU, Bochs, and Virtual Box, to test new version of the ResearchOS kernel.
 
 ## Running ResearchOS
 
@@ -34,4 +34,5 @@ You can run ResearchOS on either of the VMs: QEMU, Bochs or VirtualBox. If do yo
 1. To build ResearchOS, run: `./install.sh` on the project root directory.
 2. If you are using QEMU, you can run `qemu-system-i386 -drive file=os.img,format=raw` on the same directory as the .img file.
 3. If you are using Bochs, you can manually set up the configuration with the .img file or use the default configuration provided in the config/ folder (by loading it using Bochs' menu).
+
 
