@@ -107,17 +107,15 @@ uint16_t getCycleElapsed(uint16_t oldCount) {
 void handleKeypress() {
     key_st key = irqGetKeyboardChar();
 
-    if (key.cmd == ESCAPE && key.pressedDown) {
-        clearScreen();
-        kprintf("> ");
-    } 
-    
     if (key.cmd == NOT_CMD && key.pressedDown) {
         if (key.data == '\n') {
             kprintf("\n");
             
-            if (_buffer_i >= 5 && strncmp(_key_buffer, "greet", 5) == 0)
+            if (_buffer_i >= 5 && strncmp(_key_buffer, "greet", 5) == 0) {
                 kprintf("Hi! Welcome to ResearchOS\n");
+            } else if (_buffer_i >= 5 && strncmp(_key_buffer, "clear", 5) == 0) {
+                clearScreen();
+            }
 
             _buffer_i = 0;
             kprintf("> ");
