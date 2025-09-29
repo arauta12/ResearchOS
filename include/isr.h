@@ -4,7 +4,7 @@
 #include <device/ps2_keyboard.h>
 #include <device/pic.h>
 #include <device/pit.h>
-#include <device/atapio.h>
+#include <device/disk.h>
 #include <stdio.h>
 #include <stdint.h>
 #include <stdout.h>
@@ -14,6 +14,7 @@
 
 #define IDT_PRIVILEGE_LVL(n) n << 5
 #define IDT_INIT_FLAG 1 << 7
+#define MAX_BUFFER_LEN 1024
 
 typedef struct idt_entry {
     uint16_t offsetLow;
@@ -32,7 +33,8 @@ typedef enum gates {
 } GATE_TYPE;
 
 static uint16_t _pit_count;
-static bool _trigger;
+static char _key_buffer[MAX_BUFFER_LEN];
+static int _buffer_i;
 
 void handleKeypress();
 void handleTimer();

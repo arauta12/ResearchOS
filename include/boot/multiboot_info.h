@@ -7,8 +7,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include <device/drive_main.h>
-
 #define END_TAG_TYPE    0
 #define BOOT_CMD_LINE   1
 #define BOOTLOADER_NAME 2

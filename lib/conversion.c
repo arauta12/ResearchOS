@@ -131,16 +131,16 @@ int stringToInt(const char* str) {
  * @param num Integer to convert into a string (integer string)
  * @return Char pointer to new string (same pointer as destination)
  */
-char* intToString(char* destination, size_t num) {
+char* intToString(char* dest, size_t num) {
     if (num == 0) {
-        destination[0] = '0';
-        return destination;
+        dest[0] = '0';
+        return dest;
     }
 
     int endIndex = 0;
 
     if (num < 0) {
-        destination[0] = '-';
+        dest[0] = '-';
         endIndex = 1;
         num *= -1;
     }
@@ -153,14 +153,14 @@ char* intToString(char* destination, size_t num) {
     }
 
     int i = endIndex + numDigits - 1;
-    destination[i + 1] = '\0';
+    dest[i + 1] = '\0';
     while (num > 0) {
-        destination[i] = digitToChar(num % 10);
+        dest[i] = digitToChar(num % 10);
         num /= 10;
         i--;
     }
 
-    return destination;
+    return dest;
 }
 
 /**
@@ -190,16 +190,11 @@ char hexToChar(int hexDigit) {
  * @param num The (hex) number to use
  * @return Char pointer to new string (same pointer as destination)
  */
-char* intToHex(char* destination, size_t num) {
-    // if (num < 0) {
-    //     destination[0] = '\0';
-    //     return destination;
-    // }
-
+char* intToHex(char* dest, size_t num) {
     if (num == 0) {
-        destination[0] = '0';
-        destination[1] = '\0';
-        return destination;
+        dest[0] = '0';
+        dest[1] = '\0';
+        return dest;
     }
 
     size_t cpyNum = num;
@@ -210,15 +205,15 @@ char* intToHex(char* destination, size_t num) {
     }
 
     char* prefix = "0x";
-    strcpy(destination, prefix);
+    strcpy(dest, prefix);
 
     int i = numDigits + 1;
-    destination[i + 1] = '\0';
+    dest[i + 1] = '\0';
     while (num > 0) {
-        destination[i] = hexToChar(num % 16);
+        dest[i] = hexToChar(num % 16);
         i--;
         num /= 16;
     }
 
-    return destination;
+    return dest;
 }

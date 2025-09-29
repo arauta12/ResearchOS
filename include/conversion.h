@@ -6,18 +6,18 @@
 #include <stddef.h>
 #include <string.h>
 
-bool isDigit(char);
+bool isDigit(char c);
 
-char toLower(char);
-char toUpper(char);
+char toLower(char c);
+char toUpper(char c);
 
-bool isLetter(char);
+bool isLetter(char c);
 
-int charToDigit(char);
-char digitToChar(int);
-int stringToInt(const char*);
-char* intToString(char*, size_t);
-char hexToChar(int);
-char* intToHex(char*, size_t);
+int charToDigit(char c);
+char digitToChar(int digit);
+int stringToInt(const char* str);
+char* intToString(char* dest, size_t num);
+char hexToChar(int hexDigit);
+char* intToHex(char* dest, size_t num);
 
 #endif

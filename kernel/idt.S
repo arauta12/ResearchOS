@@ -35,12 +35,12 @@ isr_keyboard:
     popal
     iretl
 
-    .extern ataSectorIrq
+    .extern diskIrq
     .globl isr_disk1
     .type isr_disk1,@function
 isr_disk1:
     pushal
-    call    ataSectorIrq
+    call    diskIrq
     popal
     iretl
 

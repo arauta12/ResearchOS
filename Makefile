@@ -14,13 +14,13 @@ CFLAGS += -m32 -ffreestanding -nostdlib -z noexecstack -no-pie
 OS_IMG := krnl.exe
 
 ifeq ($(MAKECMDGOALS), debug)
-	CFLAGS += -g
+	CFLAGS += -g -D DEBUG
 endif
 
 export INCLUDE_PATH
 export CFLAGS
 
-.PHONY: all bin debug
+.PHONY: all bin debug clean cleanObjs
 
 all, debug: $(BIN_PATH)/$(OS_IMG)
 
@@ -30,9 +30,13 @@ $(BIN_PATH)/$(OS_IMG): $(ALL_SRCS)
 	cd drivers && $(MAKE)
 	cd mm && $(MAKE)
 	cd lib && $(MAKE)
+	cd fs && $(MAKE)
 
 bin: $(OBJS)
 	$(CC) $(CFLAGS) -T linker.ld $(BOOT_OBJS) $(KRNL_OBJS) -o $(BIN_PATH)/$(OS_IMG)
 
 clean:
 	$(RM) -r $(BIN_PATH)
+
+cleanObjs:
+	$(RM) $(BIN_PATH)/*.o

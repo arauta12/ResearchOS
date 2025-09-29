@@ -4,9 +4,10 @@
 #include <conversion.h>
 
 IDT_ENTRY _idt_table[256];
+static char _key_buffer[MAX_BUFFER_LEN] = {0};
+static int _buffer_i = 0;
 
 static uint16_t _pit_count = 0;
-static bool _trigger = false;
 
 struct idt_desc {
     uint16_t size;
@@ -86,7 +87,6 @@ void handlePageFault() {
 
 void handleTimer() {
     _pit_count = _pit_count + 1;
-    _trigger = false;
     reloadCounter();
 
     picEoi(0);
@@ -109,10 +109,23 @@ void handleKeypress() {
 
     if (key.cmd == ESCAPE && key.pressedDown) {
         clearScreen();
-    }
-
+        kprintf("> ");
+    } 
+    
     if (key.cmd == NOT_CMD && key.pressedDown) {
-        kputchar(key.data);
+        if (key.data == '\n') {
+            kprintf("\n");
+            
+            if (_buffer_i >= 5 && strncmp(_key_buffer, "greet", 5) == 0)
+                kprintf("Hi! Welcome to ResearchOS\n");
+
+            _buffer_i = 0;
+            kprintf("> ");
+        } else if (_buffer_i < MAX_BUFFER_LEN) {
+            kputchar(key.data);
+            _key_buffer[_buffer_i] = key.data;
+            _buffer_i++;
+        }
     }
     
     picEoi(1);

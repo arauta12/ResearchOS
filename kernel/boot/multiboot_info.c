@@ -1,5 +1,6 @@
 #include <boot/multiboot_info.h>
 #include <boot/multiboot_mmap.h>
+#include <fs/mbr.h>
 
 static bootinfo_head_st* _multiboot_tbl_ptr = NULL;
 static uint32_t _krnl_physical_addr = 0;
@@ -18,7 +19,7 @@ void readBootDev(tag_start_st* tagPtr) {
     uint32_t partitionIndex = *(iter++);
     uint32_t subPartitionIndex = *iter;
 
-    updateBootInfo(devCode, partitionIndex, subPartitionIndex);
+    setBootPartition(partitionIndex);
     
     kprintf("Bios device code: %x\n", devCode);
     kprintf("Partition #: %x\n", partitionIndex);

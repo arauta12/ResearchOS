@@ -9,13 +9,13 @@ fi
 ROOT_DIR=$1
 IMG_NAME=$2
 KRNL_EXE=$3
+KRNL_EXE_DB=$4
 
 # Fresh installation
 if [ "$UPDATE" != "u" ]; then
-    # dd if=/dev/zero of=$IMG_NAME bs=1024 count=131072
-    dd if=/dev/zero of=$IMG_NAME bs=1G count=1
+    dd if=/dev/zero of=$IMG_NAME bs=1G count=4
     parted -s $IMG_NAME mklabel msdos \
-        mkpart primary fat32 1MiB 100% \
+        mkpart primary fat32 2MiB 100% \
         set 1 boot on \
         print all
     echo "✅ Disk image partitioned with MBR!"
@@ -43,11 +43,15 @@ if [ "$UPDATE" != "u" ]; then
 fi
 
 sudo cp bin/$KRNL_EXE $ROOT_DIR/boot
+sudo cp bin/$KRNL_EXE_DB $ROOT_DIR/boot
 sudo tee $ROOT_DIR/boot/grub/grub.cfg > /dev/null << EOF
 menuentry "ResearchOS" {
-    multiboot2 /boot/krnl.exe
-    boot
+    multiboot2 /boot/$KRNL_EXE
 }
+menuentry "ResearchOS - Debug" {
+    multiboot2 /boot/$KRNL_EXE_DB
+}
+
 EOF
 sync
 echo "✅ Created grub config!"

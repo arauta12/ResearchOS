@@ -20,8 +20,8 @@
 #define KERN_INFO       6
 #define KERN_DEBUG      7
 
-int kerror(int, const char*, ...);
-int kprintf(const char*, ...);
+int kerror(int errorLevel, const char* format, ...);
+int kprintf(const char* format, ...);
 int kputchar(int);
 
 #endif

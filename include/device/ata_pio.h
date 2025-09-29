@@ -1,12 +1,13 @@
-#ifndef ATAPIO_H
-#define ATAPIO_H
+#ifndef ATA_PIO_H
+#define ATA_PIO_H
 
 #include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
-
 #include <device/pic.h>
+#include <device/ata.h>
+#include <mm/pmm.h>
 #include <io.h>
 
 #define ATA_PRIMARY_PORT    0x1F0
@@ -41,6 +42,7 @@
 // Status
 #define ATA_ERR_BIT         (1 << 0)
 #define ATA_DRQ_BIT         (1 << 3)
+#define ATA_DEV_BIT         (1 << 4)
 #define ATA_FAULT_BIT       (1 << 5)
 #define ATA_DRDY_BIT        (1 << 6)
 #define ATA_BSY_BIT         (1 << 7)
@@ -48,53 +50,27 @@
 #define ATA_IDENTIFY_DEV    0xEC
 #define ATA_READ_SECTS      0x20
 #define ATA_READ_SECTS_EXT  0x24
+#define ATA_READ_MULT       0xC4
+#define ATA_READ_MULT_EXT   0x29
 #define ATA_WRITE_SECTS     0x30
 #define ATA_WRITE_SECTS_EXT 0x34
+#define ATA_WRITE_MULT      0xC5
+#define ATA_WRITE_MULT_EXT  0x39
 #define ATA_FLUSH_CACHE     0xE7
-#define ATA_NO_CMD          0
+#define ATA_SET_MULTIPLE    0xC6
 
-typedef enum {
-    NO_MODE,
-    CHS,
-    LBA28
-} ATA_ADDR_MODE;
-
-static bool _lba_supported;
-static bool _flush_supported;
-static bool _flush_supported_ext;
-static bool _sector_multiple_supported;
-
-static ATA_ADDR_MODE _curr_mode;
-static int _drive_selected;
-static bool _int_enabled;
-static uint32_t _num_usable_sectors;
 static int _max_attempts;
-static uint16_t _max_drq_block_sectors;
-static uint16_t _drq_block_sectors;
 
-static uint8_t _last_cmd;
-static uint8_t _num_sectors_remaining;
-static uint8_t _num_sectors_transferred;
-static uint16_t* _curr_transfer_addr;
+bool ataPioReadIdentify(ata_info_st* ataInfo);
+bool ataPioReadTransfer(void* addr, ata_info_st* ataInfo);
+bool ataPioWriteTransfer(void* addr, ata_info_st* ataInfo);
+bool ataPioMultReadTransfer(void* addr, ata_info_st* ataInfo);
+bool ataPioMultWriteTransfer(void* addr, ata_info_st* ataInfo);
 
-static bool _wait_bsy(bool bsy);
-static bool _wait_drdy(bool drdy);
-static bool _wait_drq(bool drq);
-static bool _is_drq();
-static bool _is_bsy();
-static bool _has_err();
-static void _wait_400ns();
+bool ataReadSectors(void* addr, uint32_t startSect, uint16_t numSectors, ata_info_st* ataInfo);
+bool ataWriteSectors(void* addr, uint32_t startSect, uint16_t numSectors, ata_info_st* ataInfo);
 
-int ataGetDrive();
-bool ataSetDrive(bool dev1);
-void ataToggleInterrupts(bool enable);
-bool ataSoftwareReset();
-
-bool ataReadSector(void* addr, uint32_t startSect, uint8_t numSectors);
-bool ataWriteSectors(void* addr, uint32_t startSect, uint8_t numSectors);
-bool ataSectorsRW(void* addr, uint32_t startSect, uint8_t numSectors, bool readMode);
-bool ataIdentifyDevice();
-bool ataInitialize(int diskNum);
-void ataSectorIrq();
+bool ataMultReadSectors(void* addr, uint32_t startSect, uint16_t numSectors, ata_info_st* ataInfo);
+bool ataMultWriteSectors(void* addr, uint32_t startSect, uint16_t numSectors, ata_info_st* ataInfo);
 
 #endif
