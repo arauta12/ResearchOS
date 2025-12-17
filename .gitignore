@@ -1,8 +1,0 @@
-TODO.md
-os.img
-bin/
-scripts/*
-.clang-format
-.vscode/
-mnt/
-!scripts/installation

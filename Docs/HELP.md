@@ -11,12 +11,16 @@
 - [grub & multiboot docs](https://www.gnu.org/software/grub/grub-documentation.html)
 - [multiboot2 docs](https://www.gnu.org/software/grub/manual/multiboot2/html_node/Index.html#SEC_Contents)
 - [grub-mkrescue docs](https://www.gnu.org/software/grub/manual/grub/html_node/Invoking-grub_002dmkrescue.html)
-- [QEMU docs](https://www.qemu.org/docs/master/)
 
 ## 🧵 OS Development Help Links
 - [osdev pages](https://wiki.osdev.org/Expanded_Main_Page)
 - [linux github](https://github.com/torvalds/linux)
 - [Specs](https://wiki.osdev.org/Technical_Specifications)
+
+## QEMU specs
+- [QEMU docs](https://www.qemu.org/docs/master/)
+- [QEMU nvme](https://www.qemu.org/docs/master/system/devices/nvme.html)
+- [QEMU usb](https://www.qemu.org/docs/master/system/devices/usb.html)
 
 ## Device driver specs
 - [Old PCI specs (pg. 213)](https://ics.uci.edu/~iharris/ics216/pci/PCI_22.pdf)

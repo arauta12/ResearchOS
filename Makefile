@@ -1,42 +1,10 @@
-INCLUDE_PATH := include
-BIN_PATH := bin
+CFLAGS += -mno-red-zone -ffreestanding -nostdlib -Wl,--subsystem,10 -e efi_main -o BOOTX64.EFI
 
-C_SRCS := $(shell find . -name *.c)
-ASM_SRCS := $(shell find . -name *.S)
+all: efi.c
+	x86_64-w64-mingw32-gcc efi.c $(CFLAGS)
 
-OBJS := $(wildcard $(BIN_PATH)/*.o)
-BOOT_OBJS := $(BIN_PATH)/boot.o
-KRNL_OBJS := $(filter-out $(BOOT_OBJS), $(OBJS))
+iso: BOOTX64.EFI
+	./disk.sh
 
-ALL_SRCS := $(C_SRCS) $(ASM_SRCS)
-CFLAGS += -m32 -ffreestanding -nostdlib -z noexecstack -no-pie
-
-OS_IMG := krnl.exe
-
-ifeq ($(MAKECMDGOALS), debug)
-	CFLAGS += -g -D DEBUG
-endif
-
-export INCLUDE_PATH
-export CFLAGS
-
-.PHONY: all bin debug clean cleanObjs
-
-all, debug: $(BIN_PATH)/$(OS_IMG)
-
-$(BIN_PATH)/$(OS_IMG): $(ALL_SRCS)
-	-mkdir -p $(BIN_PATH)
-	cd kernel && $(MAKE)
-	cd drivers && $(MAKE)
-	cd mm && $(MAKE)
-	cd lib && $(MAKE)
-	cd fs && $(MAKE)
-
-bin: $(OBJS)
-	$(CC) $(CFLAGS) -T linker.ld $(BOOT_OBJS) $(KRNL_OBJS) -o $(BIN_PATH)/$(OS_IMG)
-
-clean:
-	$(RM) -r $(BIN_PATH)
-
-cleanObjs:
-	$(RM) $(BIN_PATH)/*.o
+qemu: disk.iso
+	./qemu.sh
