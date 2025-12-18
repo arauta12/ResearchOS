@@ -1,10 +1,33 @@
-CFLAGS += -mno-red-zone -ffreestanding -nostdlib -Wl,--subsystem,10 -e efi_main -o BOOTX64.EFI
+CROSS=x86_64-w64-mingw32-
+CC=gcc
+BUILD_DIR=build
+KRNL_IMG=roskrnl.exe
+L_SCRIPT=linker.ld
+ISO_FILE=ros.iso
+CFLAGS += -ffreestanding -nostdlib -g -mno-red-zone -fPIE
 
-all: efi.c
-	x86_64-w64-mingw32-gcc efi.c $(CFLAGS)
+.PHONY: iso qemu clean debug vb
 
-iso: BOOTX64.EFI
-	./disk.sh
+$(BUILD_DIR)/$(KRNL_IMG): boot.o
+	$(LD) $(BUILD_DIR)/$^ -T $(L_SCRIPT) -o $@
+	
+%.o: %.S
+	$(CROSS)$(CC) -c $< $(CFLAGS)  -o $(BUILD_DIR)/$@
 
-qemu: disk.iso
-	./qemu.sh
+clean:
+	rm -f build/*
+
+iso:
+	./scripts/iso.sh
+
+iso-keep:
+	./scripts/iso.sh --keep
+
+vb:
+	./scripts/vb.sh
+
+run:
+	./scripts/qemu.sh
+
+debug:
+	./scripts/debug.sh
