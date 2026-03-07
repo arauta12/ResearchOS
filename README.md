@@ -31,9 +31,10 @@ You can run ResearchOS on either of the VMs: QEMU, Bochs or VirtualBox. If do yo
 
 ### Commands
 
-1. To build ResearchOS, run: `./install.sh` on the project root directory.
-2. If you are using QEMU, you can run `qemu-system-i386 -drive file=os.img,format=raw` on the same directory as the .img file.
+1. To build ResearchOS, run: `make` then either `make iso` or `make img` on the project root directory.
+2. If you are using QEMU, you can run `make run`.
 3. If you are using Bochs, you can manually set up the configuration with the .img file or use the default configuration provided in the config/ folder (by loading it using Bochs' menu).
+
 
 
 
