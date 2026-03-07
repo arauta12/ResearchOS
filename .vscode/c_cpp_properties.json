@@ -1,0 +1,15 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "/usr/include/efi/**",
+                "/usr/include/efi",
+                "${workspaceFolder}/include"
+            ],
+            "defines": []
+        }
+    ],
+    "version": 4
+}

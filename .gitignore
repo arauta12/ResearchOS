@@ -1,3 +1,6 @@
-.clang-format
 ros.iso
 build/
+*.o
+*.d
+roskrnl
+TODO.md

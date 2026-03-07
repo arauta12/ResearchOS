@@ -1,0 +1,7 @@
+void __attribute__((interrupt)) my_isr() {
+	int x = 1;
+}
+
+int main() {
+	return 0;
+}

@@ -1,33 +1,70 @@
-CROSS=x86_64-w64-mingw32-
+ARCH 		:= i386
+SRC_DIRS 	:= lib arch/$(ARCH)
+SCRIPTS 	:= scripts
+BUILD 		:= $(abspath build)
+INCLUDE 	:= $(abspath include)
+ISO_SHELL 	:= $(SCRIPTS)/cdimage.sh
+IMG_SHELL 	:= $(SCRIPTS)/hdimage.sh
+MAKE_INCL 	:= $(abspath Makefile.include)
+MK_FILES	:= $(abspath Makefile) $(abspath Makefile.include)
+FS			:= ext2
+
+KRNL := roskrnl
+KRNL_PATH := arch/$(ARCH)/$(KRNL)
+
+Q=@
+
 CC=gcc
-BUILD_DIR=build
-KRNL_IMG=roskrnl.exe
-L_SCRIPT=linker.ld
-ISO_FILE=ros.iso
-CFLAGS += -ffreestanding -nostdlib -g -mno-red-zone -fPIE
+AS=as
+LD=ld
 
-.PHONY: iso qemu clean debug vb
+CFLAGS+= \
+		-m32 \
+		-ffreestanding \
+		-Wall \
+		-Wextra \
+		-fno-pic \
+		-I $(INCLUDE)
+LDFLAGS+=-nostdlib -static -z noexecstack 
 
-$(BUILD_DIR)/$(KRNL_IMG): boot.o
-	$(LD) $(BUILD_DIR)/$^ -T $(L_SCRIPT) -o $@
-	
-%.o: %.S
-	$(CROSS)$(CC) -c $< $(CFLAGS)  -o $(BUILD_DIR)/$@
+ifeq ($(MAKECMDGOALS),debug)
+	CFLAGS+=-g
+endif
+
+export Q KRNL MAKE_INCL CC AS LD CFLAGS LDFLAGS INCLUDE BUILD MK_FILES
+
+.PHONY: all deps run debug run-dbg clean iso img
+
+all debug: deps $(BUILD)
+	$(Q)for dir in $(SRC_DIRS); do \
+		echo "ENTERING $$dir"; \
+		$(MAKE) -C $$dir --no-print-directory; \
+	done
+
+$(BUILD):
+	$(Q)mkdir $(BUILD)
+	$(Q)echo "CREATED BUILD DIR"
+
+deps:
+	$(Q)for dir in $(SRC_DIRS); do \
+		$(MAKE) -C $$dir deps --no-print-directory; \
+	done
 
 clean:
-	rm -f build/*
+	$(Q)for dir in $(SRC_DIRS); do \
+		$(MAKE) -C $$dir clean --no-print-directory; \
+	done
+
+	-$(RM) -r build/
 
 iso:
-	./scripts/iso.sh
+	$(Q)$(ISO_SHELL) $(KRNL_PATH)
 
-iso-keep:
-	./scripts/iso.sh --keep
-
-vb:
-	./scripts/vb.sh
+img:
+	$(Q)$(IMG_SHELL) $(KRNL_PATH) $(FS)
 
 run:
-	./scripts/qemu.sh
+	$(SCRIPTS)/run.sh $(ARCH)
 
-debug:
-	./scripts/debug.sh
+run-dbg:
+	$(SCRIPTS)/run.sh $(ARCH) -d

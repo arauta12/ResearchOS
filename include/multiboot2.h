@@ -1,0 +1,20 @@
+#pragma once
+
+#define MB2_BYTE_ALIGN 8
+#define MB2_BOOT_MAGIC 0x36d76289
+
+#define MB2_ARCH_X86 0
+#define MB2_ARCH_MIPS 4
+#define MB2_MAGIC 0xE85250D6
+
+#define MB2_END_TYPE 0
+#define MB2_INFO_TYPE 1
+#define MB2_ADDR_TYPE 2
+#define MB2_ENTRY_TYPE 3
+#define MB2_FLAGS_TYPE 4
+#define MB2_FRAMEBUF_TYPE 5
+#define MB2_MOD_ALIGN_TYPE 6
+#define MB2_EFI_BOOT_TYPE 7
+#define MB2_EFI_I386_TYPE 8
+#define MB2_EFI_AMD64_TYPE 9
+#define MB2_RELOC_TYPE 10

@@ -1,0 +1,35 @@
+# Default file to compile local files and dependency files
+
+C_SRCS 		= $(wildcard *.c)
+ASM_SRCS	= $(wildcard *.S)
+C_DEPS 		= $(C_SRCS:.c=.d)
+ASM_DEPS 	= $(ASM_SRCS:.S=.d)
+DEPS 		= $(C_DEPS) $(ASM_DEPS)
+
+C_OBJS		:= $(patsubst %.c,$(BUILD)/%.o,$(C_SRCS))
+ASM_OBJS	:= $(patsubst %.S,$(BUILD)/%.o,$(ASM_SRCS))
+
+.PHONY: deps submake
+deps: $(DEPS)
+
+submake:
+	$(Q)for dir in $(SRC_DIRS); do \
+		echo "ENTERING $$dir"; \
+		$(MAKE) -C $$dir --no-print-directory; \
+	done
+
+$(ASM_DEPS): %.d: %.S $(MK_FILES)
+	$(Q)$(CC) -M $< $(CFLAGS) -MD -o $@
+
+$(C_DEPS): %.d: %.c $(MK_FILES)
+	$(Q)$(CC) -M $< $(CFLAGS) -MD -o $@
+
+$(ASM_OBJS): $(BUILD)/%.o: %.S $(MK_FILES)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+$(C_OBJS): $(BUILD)/%.o: %.c $(MK_FILES)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+ifneq ($(MAKECMDGOALS),clean)
+include $(DEPS)
+endif
