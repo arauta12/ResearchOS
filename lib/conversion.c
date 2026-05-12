@@ -23,6 +23,20 @@ char itoh(int n) {
     }
 }
 
+int htoi(char c) {
+    if (c >= '0' && c <= '9') return C_TO_INT(c);
+
+    if (c >= 'a' && c <= 'f') {
+        return (int)c - 97 + 10;
+    }
+
+    if (c >= 'A' && c <= 'F') {
+        return (int)c - 65 + 10;
+    }
+
+    return -1;
+}
+
 char to_upper(char c) {
     if (c >= 'A' && c <= 'Z') return c;
     if (c >= 'a' && c <= 'z') return (char)(c - 32);
@@ -36,6 +50,12 @@ char to_lower(char c) {
 
     return c;
 }
+
+bool is_letter(u8 code) {
+    return (code >= 'A' && code <= 'Z') || (code >= 'a' && code <= 'z');
+}
+
+bool is_digit(char c) { return (c >= '0' && c <= '9'); }
 
 char* to_hex_u8(u8 value, char* str) { return to_string(value, str, 16, 2); }
 
@@ -79,6 +99,30 @@ char* itoa(int value, char* str, int base) {
     return str;
 }
 
+char* utoa(unsigned int value, char* str, int base) {
+    if (base <= 1 || base > 16) return str;
+    if (value == 0) {
+        str[0] = '0';
+        str[1] = '\0';
+        return str;
+    }
+
+    size_t i = 0;
+    while (value > 0) {
+        str[i++] = itoh(value % base);
+        value /= base;
+    }
+    str[i] = '\0';
+
+    for (size_t j = 0; j <= (i - 1) / 2; j++) {
+        char cpy = str[j];
+        str[j] = str[i - 1 - j];
+        str[i - 1 - j] = cpy;
+    }
+
+    return str;
+}
+
 char* to_string(size_t value, char* str, int base, int width) {
     if (base <= 1 || width <= 0 || base > 16) return str;
     if (value == 0) {
@@ -108,6 +152,43 @@ char* to_string(size_t value, char* str, int base, int width) {
     }
 
     return str;
+}
+
+size_t atoub(const char* str) {
+    size_t res = 0;
+    size_t i = 0;
+    int base = 10;
+    if (strlen(str) >= 2 &&
+        (strncmp(str, "0x", 2) == 0 || strncmp(str, "0X", 2) == 0)) {
+        base = 16;
+        i += 2;
+    } else if (strlen(str) >= 2 &&
+               (strncmp(str, "0b", 2) == 0 || strncmp(str, "0B", 2) == 0)) {
+        base = 2;
+        i += 2;
+    } else if (strlen(str) >= 1 && strncmp(str, "0", 1) == 0) {
+        base = 8;
+        i++;
+    }
+
+    while (isspace(str[i]) && str[i] != '\0') i++;
+
+    if (str[i] == '\0') return res;
+
+    while (str[i] != '\0' && isnum(str[i])) {
+        res *= base;
+
+        int v = 0;
+        if (base == 16) {
+            v = htoi(str[i++]);
+            if (v == -1) return res;
+        } else {
+            v = C_TO_INT(str[i++]);
+        }
+        res += v;
+    }
+
+    return res;
 }
 
 int atoi(const char* str) {

@@ -1,70 +1,106 @@
+# Targeted architecture
 ARCH 		:= i386
-SRC_DIRS 	:= lib arch/$(ARCH)
+
+# All top-level directories to run make on
+# NOTE: the arch directory must be last to build
+# the final executable
+SRC_DIRS 	:= kernel lib arch/$(ARCH)
+
+# Location to build the final kernel executable
+KRNL_DIR 	:= arch/$(ARCH)
+
+# Submake info to globally find all necessary directories
 SCRIPTS 	:= scripts
-BUILD 		:= $(abspath build)
+BUILD 		:= $(abspath arch/$(ARCH)/build)
+DEPS_DIR	:= $(abspath arch/$(ARCH)/deps)
 INCLUDE 	:= $(abspath include)
-ISO_SHELL 	:= $(SCRIPTS)/cdimage.sh
-IMG_SHELL 	:= $(SCRIPTS)/hdimage.sh
 MAKE_INCL 	:= $(abspath Makefile.include)
-MK_FILES	:= $(abspath Makefile) $(abspath Makefile.include)
+MK_FILES	:= $(MAKE_INCL)
+
+# Info to make the .iso and .img files
+ISO_SHELL 	:= $(KRNL_DIR)/cdimage.sh
+ISO_NAME	:= cdros.iso
+IMG_NAME	:= hdros.img
+IMG_SHELL 	:= $(KRNL_DIR)/hdimage.sh
+BOCHS_PATH 	:= /mnt/c/Program\ Files/Bochs-3.0/bochs.exe
+BOCHS_FILE	:= scripts/config/i386-bochs.bxrc
+
+# Filesystem to use for the .img main partition
 FS			:= ext2
 
-KRNL := roskrnl
-KRNL_PATH := arch/$(ARCH)/$(KRNL)
+# Kernel name and location
+KRNL 		:= roskrnl
+KRNL_PATH 	:= $(KRNL_DIR)/$(KRNL)
 
+# Masks out commands used by default
+# Replaced with custom printing to reduce wordage
 Q=@
 
+# Default build tools
 CC=gcc
 AS=as
 LD=ld
 
 CFLAGS+= \
-		-m32 \
+		-Wno-unused-variable \
+		-Wno-unused-function \
 		-ffreestanding \
 		-Wall \
 		-Wextra \
 		-fno-pic \
+		-g \
 		-I $(INCLUDE)
-LDFLAGS+=-nostdlib -static -z noexecstack 
 
-ifeq ($(MAKECMDGOALS),debug)
-	CFLAGS+=-g
+ifeq ($(ARCH),i386)
+	CFLAGS+=-m32
 endif
 
-export Q KRNL MAKE_INCL CC AS LD CFLAGS LDFLAGS INCLUDE BUILD MK_FILES
+LDFLAGS+=-nostdlib -static -z noexecstack
 
-.PHONY: all deps run debug run-dbg clean iso img
+# Submake shared variables
+export Q KRNL MAKE_INCL CC AS LD CFLAGS LDFLAGS
+export INCLUDE BUILD MK_FILES ISO_NAME IMG_NAME DEPS_DIR
 
-all debug: deps $(BUILD)
+.PHONY: all deps run debug run-dbg clean iso img test bochs
+
+all debug: $(DEPS_DIR) $(BUILD)
 	$(Q)for dir in $(SRC_DIRS); do \
 		echo "ENTERING $$dir"; \
 		$(MAKE) -C $$dir --no-print-directory; \
 	done
 
+$(DEPS_DIR):
+	$(Q)mkdir $(DEPS_DIR)
+
 $(BUILD):
 	$(Q)mkdir $(BUILD)
 	$(Q)echo "CREATED BUILD DIR"
-
-deps:
-	$(Q)for dir in $(SRC_DIRS); do \
-		$(MAKE) -C $$dir deps --no-print-directory; \
-	done
 
 clean:
 	$(Q)for dir in $(SRC_DIRS); do \
 		$(MAKE) -C $$dir clean --no-print-directory; \
 	done
 
-	-$(RM) -r build/
+	-$(Q)$(RM) -r $(BUILD)/ $(DEPS_DIR)
+	@echo "CLEAN DONE"
 
 iso:
-	$(Q)$(ISO_SHELL) $(KRNL_PATH)
+	@printf "ISO\t$(ARCH) $(KRNL)\n"
+	$(Q)$(ISO_SHELL) $(KRNL_PATH) $(ISO_NAME)
 
 img:
-	$(Q)$(IMG_SHELL) $(KRNL_PATH) $(FS)
+	@printf "IMG\t$(ARCH) $(KRNL)\n"
+	$(Q)$(IMG_SHELL) $(KRNL_PATH) $(FS) $(IMG_NAME)
 
 run:
-	$(SCRIPTS)/run.sh $(ARCH)
+	@printf "QEMU\t$(ARCH)\n"
+	$(Q)$(SCRIPTS)/run.sh $(ARCH) $(KRNL_DIR) $(ISO_NAME) $(IMG_NAME)
 
 run-dbg:
-	$(SCRIPTS)/run.sh $(ARCH) -d
+	@printf "QEMU-DBG\t$(ARCH)\n"
+	$(Q)$(SCRIPTS)/run.sh $(ARCH) $(KRNL_DIR) debug $(ISO_NAME) $(IMG_NAME)
+
+bochs:
+	$(Q)$(BOCHS_PATH) -q -f $(BOCHS_FILE)
+
+test: all iso run

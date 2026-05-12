@@ -8,7 +8,7 @@
                 "/usr/include/efi",
                 "${workspaceFolder}/include"
             ],
-            "defines": []
+            "defines": [],
         }
     ],
     "version": 4

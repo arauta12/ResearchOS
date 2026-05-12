@@ -1,24 +1,15 @@
-OBJS 		:= 	entry.o early_print.o main.o io.o
 SRC_DIRS 	:=
 LINKER		:= 	linker.ld
-OBJS 		:= 	$(patsubst %.o,$(BUILD)/%.o,$(OBJS))
-MK_FILES	+= 	$(abspath Makefile)
+RM_FILES	:= $(KRNL) $(IMG_NAME) $(ISO_NAME) $(DEPS_DIR)/* $(BUILD)/*
 
-.PHONY: all clean submake verify
+.PHONY: all verify
 
-all: submake krnl verify
+all: $(KRNL)
 
 include $(MAKE_INCL)
 
-verify:
+$(KRNL): objs $(LINKER)
+	@printf "LD\t$(KRNL)\n"
+	$(Q)$(LD) $(LDFLAGS) -T $(LINKER) $(wildcard $(BUILD)/*.o) -o $(KRNL)
 	$(Q)echo "CHECKING MULTIBOOT2"
 	$(Q)grub-file --is-x86-multiboot2 $(KRNL)
-
-krnl: $(OBJS) $(LINKER)
-	$(LD) $(LDFLAGS) -T $(LINKER) $(wildcard $(BUILD)/*.o) -o $(KRNL)
-
-clean:
-	$(Q)for dir in $(SRC_DIRS); do \
-		$(MAKE) -C $$dir clean --no-print-directory; \
-	done
-	$(Q)$(RM) $(KRNL) $(DEPS)

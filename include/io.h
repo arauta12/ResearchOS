@@ -8,3 +8,5 @@ void outl(u16 port, u32 data);
 u8 inb(u16 port);
 u16 inw(u16 port);
 u32 inl(u16 port);
+
+void io_wait();

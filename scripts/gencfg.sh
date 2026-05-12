@@ -18,7 +18,9 @@ set default=0
 set timeout=5
 
 insmod all_video
+insmod vga
 menuentry "ResearchOS" {
+    set vbemode=auto
     multiboot2 $KRNL_GRUB_PATH
     boot
 }

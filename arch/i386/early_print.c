@@ -13,6 +13,10 @@ static inline int _get_offset(int x, int y) {
     return (pos >= vga.rows * vga.cols) ? vga.rows * vga.cols - 1 : pos;
 }
 
+int get_x_pos() { return vga.x; }
+
+int get_y_pos() { return vga.y; }
+
 void set_pos(int x, int y) {
     vga.x = (x < vga.rows) ? x : vga.rows - 1;
     vga.y = (y < vga.cols) ? y : vga.cols - 1;
@@ -26,7 +30,12 @@ void tty_init() {
     vga.cols = 80;
     vga.fg = WHITE;
     vga.bg = BLACK;
+
+    tty_clear_screen();
 }
+
+COLORS tty_get_bg() { return vga.bg; }
+COLORS tty_get_fg() { return vga.fg; }
 
 void tty_clear_screen() {
     for (int i = 0; i < vga.rows * vga.cols; i++) {
@@ -37,21 +46,21 @@ void tty_clear_screen() {
 }
 
 void tty_scroll_down() {
-    // Clear last row
-    int pos = (vga.rows - 1) * vga.cols;
-    for (int col = 0; col < vga.cols; col++) {
-        vga.fb[pos].c = '\0';
-        vga.fb[pos++].color = VGA_COLOR(vga.fg, vga.bg);
-    }
-
     // Shift all contents up a row
-    pos = vga.cols;
+    int pos = vga.cols;
     while (pos < vga.rows * vga.cols) {
         vga.fb[pos - vga.cols] = vga.fb[pos];
         pos++;
     }
 
     vga.x = (vga.x > 0) ? vga.x - 1 : 0;
+
+    // Clear last row
+    pos = (vga.rows - 1) * vga.cols;
+    for (int col = 0; col < vga.cols; col++) {
+        vga.fb[pos].c = '\0';
+        vga.fb[pos++].color = VGA_COLOR(vga.fg, vga.bg);
+    }
 }
 
 int tty_put_char(char c) {
@@ -61,16 +70,16 @@ int tty_put_char(char c) {
     return 1;
 }
 
-int tty_put_color_char(char c, VGA_COLORS fg) {
+int tty_put_color_char(char c, COLORS fg) {
     int pos = _get_offset(vga.x, vga.y);
     vga.fb[pos].c = c;
     vga.fb[pos].color = VGA_COLOR(fg, vga.bg);
     return 1;
 }
 
-void tty_set_fg(VGA_COLORS fg) { vga.fg = fg; }
+void tty_set_fg(COLORS fg) { vga.fg = fg; }
 
-void tty_set_bg(VGA_COLORS bg) { vga.bg = bg; }
+void tty_set_bg(COLORS bg) { vga.bg = bg; }
 
 int tty_print_string(const char* str) {
     size_t i = 0;
@@ -84,7 +93,7 @@ int tty_print_string(const char* str) {
                 pos = (pos - pos % vga.cols) + vga.cols;
                 break;
             case '\t':
-                pos = (pos + 3) & (~3);
+                pos = (pos + 4);
                 break;
 
             default:
@@ -103,7 +112,7 @@ int tty_print_string(const char* str) {
     return i;
 }
 
-int tty_print_color_string(const char* str, VGA_COLORS fg) {
+int tty_print_color_string(const char* str, COLORS fg) {
     size_t i = 0;
     int pos = _get_offset(vga.x, vga.y);
     while (str[i] != '\0') {

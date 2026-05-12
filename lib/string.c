@@ -81,3 +81,13 @@ int strncmp(const char* str1, const char* str2, size_t num) {
     if (str1[i] > str2[i]) return 1;
     return 0;
 }
+
+void* memcpy(void* dest, const void* src, size_t count) {
+    u8* destArr = (u8*)dest;
+    const u8* srcArr = (const u8*)src;
+
+    size_t i = 0;
+    for (; i < count; i++) destArr[i] = srcArr[i];
+
+    return dest;
+}

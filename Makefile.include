@@ -2,34 +2,47 @@
 
 C_SRCS 		= $(wildcard *.c)
 ASM_SRCS	= $(wildcard *.S)
-C_DEPS 		= $(C_SRCS:.c=.d)
-ASM_DEPS 	= $(ASM_SRCS:.S=.d)
+C_DEPS 		= $(patsubst %.c, $(DEPS_DIR)/%.d, $(C_SRCS))
+ASM_DEPS 	= $(patsubst %.S, $(DEPS_DIR)/%.d, $(ASM_SRCS))
 DEPS 		= $(C_DEPS) $(ASM_DEPS)
 
 C_OBJS		:= $(patsubst %.c,$(BUILD)/%.o,$(C_SRCS))
 ASM_OBJS	:= $(patsubst %.S,$(BUILD)/%.o,$(ASM_SRCS))
+OBJS		:= $(C_OBJS) $(ASM_OBJS)
 
-.PHONY: deps submake
-deps: $(DEPS)
+.PHONY: submake objs clean
 
+objs: $(OBJS) submake
+
+# Enter subdirs to recursive make
 submake:
 	$(Q)for dir in $(SRC_DIRS); do \
 		echo "ENTERING $$dir"; \
 		$(MAKE) -C $$dir --no-print-directory; \
 	done
 
-$(ASM_DEPS): %.d: %.S $(MK_FILES)
-	$(Q)$(CC) -M $< $(CFLAGS) -MD -o $@
-
-$(C_DEPS): %.d: %.c $(MK_FILES)
-	$(Q)$(CC) -M $< $(CFLAGS) -MD -o $@
-
+# Update deps and compile source files 
 $(ASM_OBJS): $(BUILD)/%.o: %.S $(MK_FILES)
-	$(CC) $(CFLAGS) -o $@ -c $<
+	@printf "AS\t$<\n"
+	$(Q)$(CC) $(CFLAGS) \
+		-MD \
+		-MF $(DEPS_DIR)/$*.d \
+		-MT $@ \
+		-o $@ -c $<
 
 $(C_OBJS): $(BUILD)/%.o: %.c $(MK_FILES)
-	$(CC) $(CFLAGS) -o $@ -c $<
+	@printf "CC\t$<\n"
+	$(Q)$(CC) $(CFLAGS) \
+		-MD \
+		-MF $(DEPS_DIR)/$*.d \
+		-MT $@ \
+		-o $@ -c $<
 
-ifneq ($(MAKECMDGOALS),clean)
-include $(DEPS)
-endif
+# Remove targeted files and repeat for subdirs
+clean:
+	$(Q)$(RM) $(RM_FILES)
+	$(Q)for dir in $(SRC_DIRS); do \
+		$(MAKE) -C $$dir clean --no-print-directory; \
+	done
+
+-include $(DEPS)

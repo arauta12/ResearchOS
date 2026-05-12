@@ -24,7 +24,7 @@ typedef enum {
     LIGH_MAGENTA,
     YELLOW,
     WHITE
-} VGA_COLORS;
+} COLORS;
 
 struct vga_cell {
     char c;
@@ -37,20 +37,26 @@ struct vga_info {
     int y;
     int cols;
     int rows;
-    VGA_COLORS fg;
-    VGA_COLORS bg;
+    COLORS fg;
+    COLORS bg;
 };
 
 void disable_cursor();
 void set_pos(int x, int y);
+int get_x_pos();
+int get_y_pos();
 void tty_init();
+
 int tty_put_char(char c);
-int tty_put_color_char(char c, VGA_COLORS fg);
-void tty_set_fg(VGA_COLORS fg);
-void tty_set_bg(VGA_COLORS bg);
+int tty_put_color_char(char c, COLORS fg);
+void tty_set_fg(COLORS fg);
+void tty_set_bg(COLORS bg);
 
 void tty_clear_screen();
 void tty_scroll_down();
 
+COLORS tty_get_bg();
+COLORS tty_get_fg();
+
 int tty_print_string(const char* str);
-int tty_print_color_string(const char* str, VGA_COLORS fg);
+int tty_print_color_string(const char* str, COLORS fg);

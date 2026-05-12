@@ -14,15 +14,20 @@ else
     BOOT_OPT="-drive file=$BOOT_FILE,format=raw"
 fi
 
+echo -e "USING\t$BOOT_FILE"
+
 BIOS=
 if [[ -z "$ARCH" ]] || [[ "$ARCH" == "x86_64" ]] || [[ "$ARCH" == "x64" ]]; then
     ARCH=x86_64
     BIOS="-bios /usr/share/ovmf/OVMF.fd"
+    echo -e "USING\tUEFI"
+else
+    echo -e "USING\tBIOS"
 fi
 
 DEBUG=$3
 if [[ "$DEBUG" == "debug" ]]; then
-    echo "Debugging enabled"
+    echo "DEBUGGING"
     DEBUG="-S -s"
 fi
 
@@ -32,6 +37,7 @@ qemu-system-$ARCH \
     -m 3G \
     -smp 2 \
     -no-reboot \
+    -no-shutdown \
     -monitor stdio \
     $BOOT_OPT \
     $DEBUG

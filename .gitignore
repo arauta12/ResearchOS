@@ -4,3 +4,4 @@ build/
 *.d
 roskrnl
 TODO.md
+deps/
